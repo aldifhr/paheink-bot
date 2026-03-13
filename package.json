@@ -8,6 +8,7 @@
     "test": "node --test --test-isolation=none"
   },
   "dependencies": {
-    "@upstash/redis": "^1.36.2"
+    "@upstash/redis": "^1.36.2",
+    "dotenv": "^17.3.1"
   }
 }

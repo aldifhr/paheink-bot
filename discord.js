@@ -1,7 +1,5 @@
+import "dotenv/config";
 import process from "node:process";
-import { loadEnvFile } from "./lib/env.js";
-
-loadEnvFile();
 
 const commands = [
   {
