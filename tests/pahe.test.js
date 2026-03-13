@@ -1,4 +1,4 @@
-import test from "node:test";
+﻿import test from "node:test";
 import assert from "node:assert/strict";
 import { parseMoviePost } from "../lib/pahe.js";
 
@@ -48,4 +48,37 @@ test("parseMoviePost extracts metadata and downloads", () => {
   assert.equal(movie.downloads.length, 2);
   assert.equal(movie.downloads[0].heading, "720p x264 | 1.2 GB");
   assert.equal(movie.downloads[0].links[0].label, "1F");
+});
+
+test("parseMoviePost splits multi-episode download blocks", () => {
+  const movie = parseMoviePost({
+    id: 208636,
+    link: "https://pahe.ink/sample-series/",
+    title: {
+      rendered: "Sample Series Season 2 WEB-DL [Episode 3 Added]",
+    },
+    content: {
+      rendered: `
+        <div class="box download"><div class="box-inner-block">
+          Episode 1 480p x264 | 200 MB 720p x264 | 450 MB 720p x265 | 371 MB
+          Source: 2160p.ATV.WEB-DL.DDPA5.1.HEVC-KRATOS 1080p x264 6CH | 0.98 GB 1080p x265 6CH | 716 MB<br />
+          <a href="https://teknoasian.com/e1-gd">GD</a>
+          <a href="https://teknoasian.com/e1-mg">MG</a>
+          Episode 2 480p x264 | 175 MB 720p x264 | 350 MB 720p x265 | 258 MB
+          Source: 2160p.ATV.WEB-DL.DDPA5.1.HEVC-FLUX 1080p x264 6CH | 858 MB 1080p x265 6CH | 516 MB<br />
+          <a href="https://teknoasian.com/e2-gd">GD</a>
+          <a href="https://teknoasian.com/e2-mg">MG</a>
+          Episode 3 480p x264 | 150 MB 720p x264 | 300 MB 720p x265 | 260 MB<br />
+          <a href="https://teknoasian.com/e3-gd">GD</a>
+        </div></div>
+      `,
+    },
+  });
+
+  assert.equal(movie.downloads.length, 3);
+  assert.match(movie.downloads[0].heading, /^Episode 1/i);
+  assert.match(movie.downloads[1].heading, /^Episode 2/i);
+  assert.match(movie.downloads[2].heading, /^Episode 3/i);
+  assert.equal(movie.downloads[1].links[1].label, "MG");
+  assert.equal(movie.downloads[2].links[0].href, "https://teknoasian.com/e3-gd");
 });

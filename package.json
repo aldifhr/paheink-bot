@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "register": "node discord.js",
+    "smoke": "node scripts/smoke.js",
     "test": "node --test --test-isolation=none"
   },
   "dependencies": {
