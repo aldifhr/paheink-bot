@@ -1,3 +1,4 @@
+import { waitUntil } from "@vercel/functions";
 import { InteractionType, InteractionResponseType, MessageFlags } from "../lib/constants.js";
 import { verifyDiscordRequest } from "../lib/verifyDiscord.js";
 import {
@@ -82,11 +83,11 @@ export default async function handler(req, res) {
   }
 
   if (command === "search") {
-    return handleSearch(payload, options, res);
+    return handleSearch(payload, options, res, waitUntil);
   }
 
   if (command === "latest") {
-    return handleLatest(payload, res);
+    return handleLatest(payload, res, waitUntil);
   }
 
   return res.status(400).json({ error: "Unknown command" });
