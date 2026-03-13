@@ -1,4 +1,4 @@
-﻿import { latestMovies } from "../lib/pahe.js";
+import { latestMovies } from "../lib/pahe.js";
 import { redis } from "../lib/redis.js";
 import { getChannels, getCronStatus, getState } from "../lib/store.js";
 import { logApiError, logApiHit, logApiOk } from "../lib/requestLog.js";
@@ -49,6 +49,31 @@ function mapLatest(items) {
   }));
 }
 
+function summarizeSystemHealth(health, cronStatus) {
+  const services = Object.values(health || {});
+  const okCount = services.filter((item) => item?.ok).length;
+  const hasFailures = okCount < services.length;
+
+  if (!cronStatus) {
+    return {
+      ok: !hasFailures,
+      label: hasFailures ? "Awaiting First Run (Degraded)" : "Awaiting First Run",
+    };
+  }
+
+  if (hasFailures || cronStatus.ok === false) {
+    return {
+      ok: false,
+      label: "Degraded",
+    };
+  }
+
+  return {
+    ok: true,
+    label: "Healthy",
+  };
+}
+
 export default async function handler(req, res) {
   const reqLogger = logApiHit("dashboard", req);
 
@@ -77,6 +102,13 @@ export default async function handler(req, res) {
       ? { ok: true, label: "OK" }
       : { ok: false, label: latestResult?.reason?.message || "Fetch error" };
 
+    const health = {
+      redis: redisHealth,
+      pahe: paheHealth,
+      discord: discordHealth,
+    };
+    const system = summarizeSystemHealth(health, cronStatus);
+
     const payload = {
       ok: true,
       summary: {
@@ -84,11 +116,8 @@ export default async function handler(req, res) {
         lastScanAt: state?.lastScanAt ?? null,
         lastNotifiedMovieId: state?.lastNotifiedMovieId ?? null,
       },
-      health: {
-        redis: redisHealth,
-        pahe: paheHealth,
-        discord: discordHealth,
-      },
+      system,
+      health,
       cronStatus,
       channels: Array.isArray(channels) ? channels : [],
       latest: Array.isArray(latest) ? mapLatest(latest) : [],
@@ -100,6 +129,7 @@ export default async function handler(req, res) {
       redisOk: redisHealth.ok,
       paheOk: paheHealth.ok,
       discordOk: discordHealth.ok,
+      systemOk: system.ok,
     });
     return res.status(200).json(payload);
   } catch (error) {

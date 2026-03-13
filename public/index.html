@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -221,6 +221,11 @@
       .dot.offline {
         background: var(--red);
         box-shadow: 0 0 0 8px rgba(185, 28, 28, 0.1);
+      }
+
+      .dot.degraded {
+        background: var(--amber);
+        box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.12);
       }
 
       .actions {
@@ -742,6 +747,41 @@
         return inferKind(title).toLowerCase();
       }
 
+      function setText(target, value, fallback = "-") {
+        target.textContent = value == null || value === "" ? fallback : String(value);
+      }
+
+      function safeUrl(value, fallback = "#") {
+        const raw = String(value || "").trim();
+        if (!raw) return fallback;
+
+        try {
+          const url = new URL(raw, window.location.origin);
+          if (url.protocol === "http:" || url.protocol === "https:") {
+            return url.toString();
+          }
+        } catch {}
+
+        return fallback;
+      }
+
+      function createElement(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = String(text);
+        return node;
+      }
+
+      function setBotState(mode, label) {
+        botDot.classList.remove("offline", "degraded");
+        if (mode === "error") {
+          botDot.classList.add("offline");
+        } else if (mode === "degraded") {
+          botDot.classList.add("degraded");
+        }
+        botState.textContent = label;
+      }
+
       function renderChannels(channels) {
         channelList.innerHTML = "";
         if (!channels.length) {
@@ -750,12 +790,12 @@
         }
 
         for (const item of channels) {
-          const row = document.createElement("div");
-          row.className = "row";
-          row.innerHTML = `
-            <span>Guild <strong>${item.guildId}</strong></span>
-            <span class="muted">#${item.channelId}</span>
-          `;
+          const row = createElement("div", "row");
+          const left = createElement("span");
+          left.append("Guild ");
+          left.appendChild(createElement("strong", "", item.guildId || "-"));
+          const right = createElement("span", "muted", item.channelId ? `#${item.channelId}` : "-");
+          row.append(left, right);
           channelList.appendChild(row);
         }
       }
@@ -768,29 +808,52 @@
         }
 
         for (const movie of movies) {
-          const card = document.createElement("article");
-          card.className = "movie";
-          card.innerHTML = `
-            <div class="movie-inner">
-              <img src="${movie.poster || "https://placehold.co/600x800/e7dcc9/3f3a35?text=No+Poster"}" alt="${movie.title}">
-              <div class="movie-body">
-                <div class="movie-head">
-                  <h3>${movie.title}</h3>
-                  <span class="pill ${inferKindClass(movie.title)}">${inferKind(movie.title)}</span>
-                </div>
-                <div class="movie-meta">
-                  <span class="pill">Year ${movie.year || "N/A"}</span>
-                  <span class="pill">IMDb ${movie.rating || "N/A"}</span>
-                </div>
-                <a class="button movie-link" href="${movie.link}" target="_blank" rel="noreferrer">Open Post</a>
-              </div>
-            </div>
-          `;
+          const card = createElement("article", "movie");
+          const inner = createElement("div", "movie-inner");
+          const img = document.createElement("img");
+          img.src = safeUrl(movie.poster, "https://placehold.co/600x800/e7dcc9/3f3a35?text=No+Poster");
+          img.alt = String(movie.title || "No title");
+
+          const body = createElement("div", "movie-body");
+          const head = createElement("div", "movie-head");
+          const title = createElement("h3", "", movie.title || "Untitled");
+          const kind = createElement("span", `pill ${inferKindClass(movie.title)}`, inferKind(movie.title));
+          head.append(title, kind);
+
+          const meta = createElement("div", "movie-meta");
+          meta.append(
+            createElement("span", "pill", `Year ${movie.year || "N/A"}`),
+            createElement("span", "pill", `IMDb ${movie.rating || "N/A"}`),
+          );
+
+          const link = createElement("a", "button movie-link", "Open Post");
+          link.href = safeUrl(movie.link);
+          link.target = "_blank";
+          link.rel = "noreferrer";
+
+          body.append(head, meta, link);
+          inner.append(img, body);
+          card.appendChild(inner);
           movieList.appendChild(card);
         }
       }
 
       function renderCronStatus(status) {
+        if (!status) {
+          setText(cronTimestamp, "Never");
+          setText(cronFetchedLatest, "0");
+          setText(cronTodayCount, "0");
+          setText(cronQueued, "0");
+          setText(cronNotified, "0");
+          setText(cronDelivered, "0");
+          setText(cronFailed, "0");
+          setText(cronDuration, "-");
+          setText(cronNewestId, "-");
+          setText(cronRemaining, "0");
+          setText(cronStatusText, "Never Run");
+          return;
+        }
+
         cronTimestamp.textContent = formatDate(status?.timestamp);
         cronFetchedLatest.textContent = String(status?.fetchedLatest ?? 0);
         cronTodayCount.textContent = String(status?.todayCount ?? 0);
@@ -842,8 +905,7 @@
 
       async function loadDashboard() {
         errorBox.style.display = "none";
-        botState.textContent = "Refreshing";
-        botDot.classList.remove("offline");
+        setBotState("loading", "Refreshing");
 
         try {
           const response = await fetch("/api/dashboard", { cache: "no-store" });
@@ -852,7 +914,11 @@
             throw new Error(data.error || "Failed to load dashboard");
           }
 
-          botState.textContent = "Connected";
+          const services = [data.health?.redis, data.health?.pahe, data.health?.discord];
+          const okCount = services.filter((item) => item?.ok).length;
+          const hasFailures = okCount < services.length;
+          const hasCron = Boolean(data.cronStatus);
+          setBotState(hasFailures ? "degraded" : "ok", hasCron ? (hasFailures ? "Degraded" : "Healthy") : "Awaiting First Run");
           channelCount.textContent = String(data.summary.channelCount ?? 0);
           lastScan.textContent = formatDate(data.summary.lastScanAt);
           lastMovieId.textContent = data.summary.lastNotifiedMovieId || "None";
@@ -863,8 +929,7 @@
           renderChannels(data.channels || []);
           renderMovies(data.latest || []);
         } catch (error) {
-          botState.textContent = "Error";
-          botDot.classList.add("offline");
+          setBotState("error", "Error");
           errorBox.textContent = error.message;
           errorBox.style.display = "block";
         }

@@ -1,4 +1,4 @@
-﻿import { verifyKey } from "discord-interactions";
+import { verifyKey } from "discord-interactions";
 import { waitUntil } from "@vercel/functions";
 import { InteractionType, InteractionResponseType, MessageFlags } from "../lib/constants.js";
 import {
@@ -22,6 +22,14 @@ async function getRawBody(req) {
   });
 }
 
+function parseJsonBody(rawBody) {
+  try {
+    return JSON.parse(rawBody);
+  } catch {
+    return null;
+  }
+}
+
 export default async function handler(req, res) {
   const reqLogger = logApiHit("interactive", req);
 
@@ -30,7 +38,19 @@ export default async function handler(req, res) {
     return res.status(405).end();
   }
 
-  const rawBody = await getRawBody(req);
+  if (!process.env.DISCORD_PUBLIC_KEY) {
+    logApiError(reqLogger, new Error("Missing DISCORD_PUBLIC_KEY"), { status: 500 });
+    return res.status(500).json({ error: "misconfigured_server" });
+  }
+
+  let rawBody;
+  try {
+    rawBody = await getRawBody(req);
+  } catch (error) {
+    logApiError(reqLogger, error, { status: 400, reason: "body_read_failed" });
+    return res.status(400).json({ error: "invalid_body" });
+  }
+
   const isValid = await verifyKey(
     rawBody,
     req.headers["x-signature-ed25519"],
@@ -43,7 +63,11 @@ export default async function handler(req, res) {
     return res.status(401).end("invalid request signature");
   }
 
-  const payload = JSON.parse(rawBody);
+  const payload = parseJsonBody(rawBody);
+  if (!payload) {
+    logApiOk(reqLogger, { status: 400, reason: "invalid_json" });
+    return res.status(400).json({ error: "invalid_json" });
+  }
 
   if (payload.type === InteractionType.PING) {
     logApiOk(reqLogger, { status: 200, interactionType: payload.type });
