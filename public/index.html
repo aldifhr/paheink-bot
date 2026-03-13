@@ -254,7 +254,8 @@
           <div class="label">Last Cron Run</div>
           <div class="cron-grid">
             <div class="mini"><div class="k">Timestamp</div><div class="v" id="cronTimestamp">-</div></div>
-            <div class="mini"><div class="k">Scanned</div><div class="v" id="cronScanned">-</div></div>
+            <div class="mini"><div class="k">Fetched Latest</div><div class="v" id="cronFetchedLatest">-</div></div>
+            <div class="mini"><div class="k">Today Count</div><div class="v" id="cronTodayCount">-</div></div>
             <div class="mini"><div class="k">Notified</div><div class="v" id="cronNotified">-</div></div>
             <div class="mini"><div class="k">Delivered</div><div class="v" id="cronDelivered">-</div></div>
             <div class="mini"><div class="k">Failed</div><div class="v" id="cronFailed">-</div></div>
@@ -295,7 +296,8 @@
       const errorBox = document.getElementById("errorBox");
       const refreshBtn = document.getElementById("refreshBtn");
       const cronTimestamp = document.getElementById("cronTimestamp");
-      const cronScanned = document.getElementById("cronScanned");
+      const cronFetchedLatest = document.getElementById("cronFetchedLatest");
+      const cronTodayCount = document.getElementById("cronTodayCount");
       const cronNotified = document.getElementById("cronNotified");
       const cronDelivered = document.getElementById("cronDelivered");
       const cronFailed = document.getElementById("cronFailed");
@@ -357,7 +359,8 @@
 
       function renderCronStatus(status) {
         cronTimestamp.textContent = formatDate(status?.timestamp);
-        cronScanned.textContent = String(status?.scanned ?? 0);
+        cronFetchedLatest.textContent = String(status?.fetchedLatest ?? 0);
+        cronTodayCount.textContent = String(status?.todayCount ?? 0);
         cronNotified.textContent = String(status?.notifiedMovies ?? 0);
         cronDelivered.textContent = String(status?.delivered ?? 0);
         cronFailed.textContent = String(status?.failed ?? 0);

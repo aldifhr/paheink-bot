@@ -20,7 +20,7 @@ export default async function handler(req, res) {
 
   try {
     const result = await runLatestMovieCheck();
-    logApiOk(reqLogger, { status: 200, scanned: result.scanned, notified: result.notifiedMovies, delivered: result.delivered, failed: result.failed });
+    logApiOk(reqLogger, { status: 200, fetchedLatest: result.fetchedLatest, todayCount: result.todayCount, notified: result.notifiedMovies, delivered: result.delivered, failed: result.failed });
     return res.status(200).json({
       ok: true,
       ...result,
