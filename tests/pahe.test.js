@@ -1,4 +1,4 @@
-﻿import test from "node:test";
+import test from "node:test";
 import assert from "node:assert/strict";
 import { parseMoviePost } from "../lib/pahe.js";
 
@@ -48,6 +48,29 @@ test("parseMoviePost extracts metadata and downloads", () => {
   assert.equal(movie.downloads.length, 2);
   assert.equal(movie.downloads[0].heading, "720p x264 | 1.2 GB");
   assert.equal(movie.downloads[0].links[0].label, "1F");
+});
+
+test("parseMoviePost preserves series year ranges", () => {
+  const movie = parseMoviePost({
+    id: 333,
+    link: "https://pahe.ink/sample-series/",
+    title: {
+      rendered: "Sample Series Season 1",
+    },
+    content: {
+      rendered: `
+        <div class="imdbwp imdbwp--tv dark">
+          <div class="imdbwp__content">
+            <div class="imdbwp__header"><span class="imdbwp__title">Sample Series</span> (2019&#8211;20)</div>
+            <div class="imdbwp__meta"><span>Drama</span></div>
+            <div class="imdbwp__belt"><span class="imdbwp__star">7.4</span></div>
+          </div>
+        </div>
+      `,
+    },
+  });
+
+  assert.equal(movie.year, "2019-20");
 });
 
 test("parseMoviePost splits multi-episode download blocks", () => {
