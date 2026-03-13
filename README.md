@@ -24,7 +24,7 @@ Bot ini mengambil data film dari endpoint WordPress JSON `pahe.ink`, lalu mem-pa
 Catatan:
 
 - Tidak ada whitelist. Semua film/series baru dari hasil scan terbaru akan dibroadcast ke channel yang sudah diset.
-- Endpoint cron sekarang cocok untuk polling berkala dari FastCron. Setiap hit akan cek rilisan terbaru dan hanya kirim item yang ID-nya lebih baru dari yang terakhir sudah tercatat di Redis.
+- Endpoint cron sekarang cocok untuk polling berkala dari FastCron. Setiap hit akan cek rilisan terbaru, filter hanya post dengan tanggal publish hari ini berdasarkan WIB (`Asia/Jakarta`), lalu hanya kirim item yang belum pernah ditandai di Redis.
 - Dashboard test membaca data dari `/api/dashboard` dan menampilkan status bot, channel notif, state scan, dan preview film terbaru.
 - Storage channel notif dan state cron sekarang memakai Upstash Redis via `UPSTASH_REDIS_REST_URL` dan `UPSTASH_REDIS_REST_TOKEN`, mengikuti pola dari `ikiru-bot`.
 - Flow interaction sekarang juga mengikuti pola `ikiru-bot`: verifikasi signature via `discord-interactions`, async follow-up via `@vercel/functions` `waitUntil`, dan retry untuk request REST Discord.
