@@ -6,51 +6,163 @@
     <title>pahe-tracker dashboard</title>
     <style>
       :root {
-        --bg: #0b1020;
-        --panel: #131a2b;
-        --panel-2: #1a243a;
-        --line: rgba(255, 255, 255, 0.08);
-        --text: #eef2ff;
-        --muted: #97a4c2;
-        --accent: #22c55e;
-        --accent-2: #38bdf8;
-        --danger: #f97316;
-        --danger-2: #ef4444;
-        --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+        --bg: #f3efe6;
+        --ink: #1c1917;
+        --muted: #6b645c;
+        --panel: rgba(255, 251, 245, 0.82);
+        --panel-strong: rgba(255, 248, 239, 0.94);
+        --line: rgba(46, 37, 26, 0.12);
+        --teal: #0f766e;
+        --amber: #b45309;
+        --red: #b91c1c;
+        --shadow: 0 22px 60px rgba(53, 40, 24, 0.12);
       }
 
-      * { box-sizing: border-box; }
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         margin: 0;
-        font-family: Georgia, "Times New Roman", serif;
-        color: var(--text);
+        color: var(--ink);
         background:
-          radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 28%),
-          radial-gradient(circle at top right, rgba(34, 197, 94, 0.18), transparent 24%),
-          linear-gradient(180deg, #0a0f1d 0%, #0f172a 100%);
+          radial-gradient(circle at top left, rgba(15, 118, 110, 0.13), transparent 26%),
+          radial-gradient(circle at 88% 0%, rgba(180, 83, 9, 0.14), transparent 22%),
+          linear-gradient(180deg, #f8f4eb 0%, #efe6d7 100%);
+        font-family: "Georgia", "Times New Roman", serif;
         min-height: 100vh;
       }
 
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image: linear-gradient(rgba(28, 25, 23, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(28, 25, 23, 0.03) 1px, transparent 1px);
+        background-size: 28px 28px;
+        mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 78%);
+      }
+
       .wrap {
-        width: min(1180px, calc(100% - 32px));
-        margin: 32px auto 48px;
+        width: min(1280px, calc(100% - 28px));
+        margin: 22px auto 36px;
+        position: relative;
       }
 
       .hero {
-        display: flex;
-        justify-content: space-between;
-        gap: 16px;
-        align-items: end;
-        margin-bottom: 20px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .hero-main,
+      .hero-side,
+      .panel,
+      .movie {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        backdrop-filter: blur(10px);
+        box-shadow: var(--shadow);
+      }
+
+      .hero-main {
+        border-radius: 30px;
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-main::after {
+        content: "";
+        position: absolute;
+        right: -60px;
+        top: -60px;
+        width: 220px;
+        height: 220px;
+        border-radius: 999px;
+        background: radial-gradient(circle, rgba(15, 118, 110, 0.18), transparent 68%);
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        font-size: 0.76rem;
+        color: var(--muted);
       }
 
       h1 {
         margin: 0;
-        font-size: clamp(2rem, 4vw, 3.4rem);
-        letter-spacing: -0.04em;
+        font-size: clamp(2.4rem, 6vw, 4.8rem);
+        line-height: 0.94;
+        letter-spacing: -0.06em;
       }
 
-      .muted { color: var(--muted); }
+      .hero-copy {
+        margin: 16px 0 0;
+        max-width: 650px;
+        color: var(--muted);
+        font-size: 1.03rem;
+      }
+
+      .hero-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(15, 118, 110, 0.16);
+        background: rgba(255, 255, 255, 0.5);
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        font-size: 0.84rem;
+      }
+
+      .hero-side {
+        border-radius: 30px;
+        padding: 22px;
+        display: grid;
+        gap: 16px;
+        align-content: start;
+      }
+
+      .status-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: start;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(15, 118, 110, 0.14);
+      }
+
+      .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 999px;
+        background: var(--teal);
+        box-shadow: 0 0 0 8px rgba(15, 118, 110, 0.12);
+      }
+
+      .dot.offline {
+        background: var(--red);
+        box-shadow: 0 0 0 8px rgba(185, 28, 28, 0.1);
+      }
 
       .actions {
         display: flex;
@@ -58,230 +170,383 @@
         flex-wrap: wrap;
       }
 
-      button, a.button {
-        border: 1px solid var(--line);
-        background: linear-gradient(180deg, rgba(56, 189, 248, 0.18), rgba(56, 189, 248, 0.08));
-        color: var(--text);
-        padding: 10px 14px;
+      button,
+      a.button {
+        appearance: none;
+        border: 1px solid rgba(28, 25, 23, 0.12);
+        background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(246, 238, 224, 0.96));
+        color: var(--ink);
+        padding: 11px 15px;
         border-radius: 999px;
         cursor: pointer;
         text-decoration: none;
         font: inherit;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
       }
 
-      .grid {
+      button.primary {
+        background: linear-gradient(180deg, #155e75, #0f766e);
+        color: #f8fafc;
+        border-color: rgba(15, 118, 110, 0.35);
+      }
+
+      .mini-note {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .summary-strip {
         display: grid;
-        grid-template-columns: repeat(12, 1fr);
-        gap: 16px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 18px;
       }
 
-      .card {
-        background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      .summary-card {
+        border-radius: 24px;
+        padding: 18px 20px;
+        background: var(--panel-strong);
         border: 1px solid var(--line);
         box-shadow: var(--shadow);
-        border-radius: 22px;
-        padding: 18px;
       }
 
-      .stat { grid-column: span 3; }
-      .wide { grid-column: span 12; }
-      .half { grid-column: span 6; }
-
-      .label {
-        color: var(--muted);
+      .summary-card .label,
+      .panel-title,
+      .metric-label,
+      .kicker {
+        margin: 0 0 10px;
         text-transform: uppercase;
-        letter-spacing: 0.14em;
-        font-size: 0.72rem;
-        margin-bottom: 12px;
+        letter-spacing: 0.13em;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        font-size: 0.74rem;
+        color: var(--muted);
       }
 
-      .value {
-        font-size: clamp(1.35rem, 3vw, 2.2rem);
-        line-height: 1.05;
+      .summary-card .value {
+        font-size: clamp(1.6rem, 4vw, 2.45rem);
+        line-height: 1;
       }
 
-      .status {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+      .summary-card .sub {
+        margin-top: 8px;
+        color: var(--muted);
         font-size: 0.95rem;
       }
 
-      .dot {
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        background: var(--accent);
-        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.12);
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+        gap: 18px;
       }
 
-      .dot.offline {
-        background: var(--danger-2);
-        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.12);
+      .stack {
+        display: grid;
+        gap: 18px;
+      }
+
+      .panel {
+        border-radius: 28px;
+        padding: 22px;
+      }
+
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: baseline;
+        margin-bottom: 16px;
+      }
+
+      .panel-title {
+        margin: 0;
+        color: var(--muted);
+      }
+
+      .panel-value {
+        font-size: 1rem;
+        color: var(--muted);
+      }
+
+      .cron-board {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .metric {
+        min-height: 106px;
+        border-radius: 22px;
+        padding: 16px;
+        background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(249, 241, 229, 0.92));
+        border: 1px solid rgba(28, 25, 23, 0.08);
+      }
+
+      .metric-value {
+        font-size: 1.82rem;
+        line-height: 1;
+      }
+
+      .metric-copy {
+        margin-top: 8px;
+        color: var(--muted);
+        font-size: 0.92rem;
       }
 
       .list {
         display: grid;
-        gap: 12px;
+        gap: 10px;
       }
 
       .row {
         display: flex;
         justify-content: space-between;
         gap: 12px;
-        padding: 12px 14px;
-        border-radius: 16px;
-        background: rgba(255,255,255,0.035);
-        border: 1px solid rgba(255,255,255,0.05);
+        align-items: start;
+        padding: 14px 15px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.55);
+        border: 1px solid rgba(28, 25, 23, 0.08);
       }
 
-      .cron-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 12px;
+      .row strong {
+        font-weight: 700;
       }
 
-      .mini {
-        border-radius: 16px;
-        padding: 14px;
-        background: rgba(255,255,255,0.035);
-        border: 1px solid rgba(255,255,255,0.05);
-      }
-
-      .mini .k {
+      .muted {
         color: var(--muted);
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        margin-bottom: 8px;
-      }
-
-      .mini .v {
-        font-size: 1.3rem;
       }
 
       .movies {
         display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
       }
 
       .movie {
-        background: var(--panel-2);
-        border: 1px solid var(--line);
-        border-radius: 18px;
+        border-radius: 26px;
         overflow: hidden;
+      }
+
+      .movie-inner {
+        display: grid;
+        grid-template-columns: 160px minmax(0, 1fr);
+        min-height: 100%;
       }
 
       .movie img {
         width: 100%;
-        aspect-ratio: 3 / 4;
+        height: 100%;
         object-fit: cover;
         display: block;
-        background: #0f172a;
+        background: #d6d3d1;
       }
 
-      .movie .body {
-        padding: 12px;
+      .movie-body {
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(244, 236, 223, 0.92));
+      }
+
+      .movie-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: start;
       }
 
       .movie h3 {
-        margin: 0 0 6px;
-        font-size: 1rem;
+        margin: 0;
+        font-size: 1.15rem;
+        line-height: 1.08;
+      }
+
+      .movie-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
       }
 
       .pill {
-        display: inline-block;
-        padding: 4px 9px;
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 10px;
         border-radius: 999px;
-        border: 1px solid rgba(56, 189, 248, 0.24);
-        color: #bae6fd;
+        border: 1px solid rgba(15, 118, 110, 0.16);
+        background: rgba(15, 118, 110, 0.06);
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
         font-size: 0.78rem;
       }
 
-      .error {
-        color: #fed7aa;
-        background: rgba(249, 115, 22, 0.14);
-        border: 1px solid rgba(249, 115, 22, 0.35);
-        padding: 12px 14px;
-        border-radius: 16px;
-        display: none;
-        margin-bottom: 16px;
+      .movie-link {
+        margin-top: auto;
       }
 
-      @media (max-width: 920px) {
-        .stat, .half, .wide { grid-column: span 12; }
-        .movies { grid-template-columns: 1fr; }
-        .cron-grid { grid-template-columns: 1fr 1fr; }
-        .hero { align-items: start; flex-direction: column; }
+      .error {
+        display: none;
+        margin-bottom: 18px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        color: #7c2d12;
+        background: rgba(249, 115, 22, 0.1);
+        border: 1px solid rgba(249, 115, 22, 0.24);
+      }
+
+      @media (max-width: 1120px) {
+        .hero,
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .movies {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .wrap {
+          width: min(100% - 16px, 100%);
+        }
+
+        .hero-main,
+        .hero-side,
+        .panel,
+        .summary-card,
+        .movie {
+          border-radius: 22px;
+        }
+
+        .summary-strip {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .cron-board {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .movie-inner {
+          grid-template-columns: 1fr;
+        }
+
+        .movie img {
+          aspect-ratio: 3 / 2;
+        }
       }
     </style>
   </head>
   <body>
     <main class="wrap">
       <section class="hero">
-        <div>
-          <p class="muted">Simple test dashboard</p>
-          <h1>pahe-tracker</h1>
-        </div>
-        <div class="actions">
-          <button id="refreshBtn" type="button">Refresh</button>
-          <a class="button" href="/api/dashboard" target="_blank" rel="noreferrer">Open JSON</a>
-        </div>
+        <article class="hero-main">
+          <p class="eyebrow">Pahe Feed Monitor</p>
+          <h1>Release radar for film and series drops.</h1>
+          <p class="hero-copy">Simple control surface untuk bot Discord `pahe-tracker`. Halaman ini fokus ke health bot, hasil cron terbaru, dan preview rilisan yang sedang masuk dari pahe.ink.</p>
+          <div class="hero-meta">
+            <span class="chip">Discord notify</span>
+            <span class="chip">Redis dedupe</span>
+            <span class="chip">WIB date filter</span>
+          </div>
+        </article>
+
+        <aside class="hero-side">
+          <div class="status-line">
+            <div>
+              <p class="eyebrow">Bot State</p>
+              <div class="status-pill"><span id="botDot" class="dot"></span><span id="botState">Loading...</span></div>
+            </div>
+            <div class="mini-note">Latest state from `/api/dashboard`</div>
+          </div>
+          <div class="actions">
+            <button id="refreshBtn" class="primary" type="button">Refresh Dashboard</button>
+            <a class="button" href="/api/dashboard" target="_blank" rel="noreferrer">Open JSON</a>
+          </div>
+          <div class="mini-note">Cron scan stores state in Redis and only pushes titles dated for the current WIB day.</div>
+        </aside>
       </section>
 
       <div id="errorBox" class="error"></div>
 
-      <section class="grid">
-        <article class="card stat">
-          <div class="label">Bot State</div>
-          <div class="status"><span id="botDot" class="dot"></span><span id="botState">Loading...</span></div>
-        </article>
-        <article class="card stat">
-          <div class="label">Registered Channels</div>
+      <section class="summary-strip">
+        <article class="summary-card">
+          <p class="label">Registered Channels</p>
           <div class="value" id="channelCount">-</div>
+          <div class="sub">Guild targets currently stored</div>
         </article>
-        <article class="card stat">
-          <div class="label">Last Scan</div>
+        <article class="summary-card">
+          <p class="label">Last Scan</p>
           <div class="value" id="lastScan">-</div>
+          <div class="sub">Latest cron timestamp in WIB</div>
         </article>
-        <article class="card stat">
-          <div class="label">Last Notified Movie ID</div>
+        <article class="summary-card">
+          <p class="label">Last Notified ID</p>
           <div class="value" id="lastMovieId">-</div>
+          <div class="sub">Newest item persisted in state</div>
         </article>
+        <article class="summary-card">
+          <p class="label">Cron Status</p>
+          <div class="value" id="cronStatusText">-</div>
+          <div class="sub">Healthy when last run finished cleanly</div>
+        </article>
+      </section>
 
-        <article class="card wide">
-          <div class="label">Last Cron Run</div>
-          <div class="cron-grid">
-            <div class="mini"><div class="k">Timestamp</div><div class="v" id="cronTimestamp">-</div></div>
-            <div class="mini"><div class="k">Fetched Latest</div><div class="v" id="cronFetchedLatest">-</div></div>
-            <div class="mini"><div class="k">Today Count</div><div class="v" id="cronTodayCount">-</div></div>
-            <div class="mini"><div class="k">Notified</div><div class="v" id="cronNotified">-</div></div>
-            <div class="mini"><div class="k">Delivered</div><div class="v" id="cronDelivered">-</div></div>
-            <div class="mini"><div class="k">Failed</div><div class="v" id="cronFailed">-</div></div>
-            <div class="mini"><div class="k">Duration</div><div class="v" id="cronDuration">-</div></div>
-            <div class="mini"><div class="k">Newest ID</div><div class="v" id="cronNewestId">-</div></div>
-            <div class="mini"><div class="k">Status</div><div class="v" id="cronStatusText">-</div></div>
-          </div>
-        </article>
+      <section class="layout">
+        <div class="stack">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="panel-title">Cron Board</p>
+                <div class="panel-value">Most recent `/api/cron` snapshot</div>
+              </div>
+              <div class="kicker" id="cronTimestamp">-</div>
+            </div>
+            <div class="cron-board">
+              <div class="metric"><div class="metric-label">Fetched Latest</div><div class="metric-value" id="cronFetchedLatest">-</div><div class="metric-copy">Latest posts fetched from pahe.ink</div></div>
+              <div class="metric"><div class="metric-label">Today Count</div><div class="metric-value" id="cronTodayCount">-</div><div class="metric-copy">Posts matching current WIB date</div></div>
+              <div class="metric"><div class="metric-label">Notified</div><div class="metric-value" id="cronNotified">-</div><div class="metric-copy">Titles marked sent this run</div></div>
+              <div class="metric"><div class="metric-label">Delivered</div><div class="metric-value" id="cronDelivered">-</div><div class="metric-copy">Messages delivered to Discord</div></div>
+              <div class="metric"><div class="metric-label">Failed</div><div class="metric-value" id="cronFailed">-</div><div class="metric-copy">Failed channel deliveries</div></div>
+              <div class="metric"><div class="metric-label">Duration</div><div class="metric-value" id="cronDuration">-</div><div class="metric-copy">Invocation time</div></div>
+              <div class="metric"><div class="metric-label">Newest ID</div><div class="metric-value" id="cronNewestId">-</div><div class="metric-copy">Top newest post from fetch window</div></div>
+            </div>
+          </article>
 
-        <article class="card half">
-          <div class="label">Notification Channels</div>
-          <div class="list" id="channelList"></div>
-        </article>
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="panel-title">Latest Preview</p>
+                <div class="panel-value">Top 10 parsed titles</div>
+              </div>
+            </div>
+            <div class="movies" id="movieList"></div>
+          </article>
+        </div>
 
-        <article class="card half">
-          <div class="label">Dashboard Notes</div>
-          <div class="list" id="notesList">
-            <div class="row"><span class="muted">Refresh to fetch current bot state from Redis and pahe.ink.</span></div>
-            <div class="row"><span class="muted">Cron status is the latest stored result from `/api/cron`.</span></div>
-          </div>
-        </article>
+        <div class="stack">
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="panel-title">Notification Channels</p>
+                <div class="panel-value">Guild to channel mapping</div>
+              </div>
+            </div>
+            <div class="list" id="channelList"></div>
+          </article>
 
-        <article class="card wide">
-          <div class="label">Latest Movies Preview</div>
-          <div class="movies" id="movieList"></div>
-        </article>
+          <article class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="panel-title">Operating Notes</p>
+                <div class="panel-value">What the current build does</div>
+              </div>
+            </div>
+            <div class="list" id="notesList">
+              <div class="row"><span class="muted">Refresh untuk ambil state bot terbaru dari Redis dan feed pahe.ink.</span></div>
+              <div class="row"><span class="muted">Cron board menampilkan hasil run terakhir yang tersimpan dari <code>/api/cron</code>.</span></div>
+              <div class="row"><span class="muted">Dedupe disimpan per tanggal WIB dan otomatis expired.</span></div>
+            </div>
+          </article>
+        </div>
       </section>
     </main>
 
@@ -316,10 +581,14 @@
         }).format(date) + " WIB";
       }
 
+      function inferKind(title) {
+        return /season|episode|eps|complete/i.test(String(title || "")) ? "Series" : "Movie";
+      }
+
       function renderChannels(channels) {
         channelList.innerHTML = "";
         if (!channels.length) {
-          channelList.innerHTML = '<div class="row"><span class="muted">Belum ada channel</span></div>';
+          channelList.innerHTML = '<div class="row"><span class="muted">Belum ada channel notifikasi yang tersimpan.</span></div>';
           return;
         }
 
@@ -337,7 +606,7 @@
       function renderMovies(movies) {
         movieList.innerHTML = "";
         if (!movies.length) {
-          movieList.innerHTML = '<div class="row"><span class="muted">Belum ada preview film</span></div>';
+          movieList.innerHTML = '<div class="row"><span class="muted">Belum ada preview title.</span></div>';
           return;
         }
 
@@ -345,12 +614,19 @@
           const card = document.createElement("article");
           card.className = "movie";
           card.innerHTML = `
-            <img src="${movie.poster || "https://placehold.co/600x800/0f172a/e2e8f0?text=No+Poster"}" alt="${movie.title}">
-            <div class="body">
-              <h3>${movie.title}</h3>
-              <p class="muted">${movie.year || "Unknown year"}</p>
-              <p><span class="pill">IMDb ${movie.rating || "N/A"}</span></p>
-              <p><a class="button" href="${movie.link}" target="_blank" rel="noreferrer">Open Post</a></p>
+            <div class="movie-inner">
+              <img src="${movie.poster || "https://placehold.co/600x800/e7dcc9/3f3a35?text=No+Poster"}" alt="${movie.title}">
+              <div class="movie-body">
+                <div class="movie-head">
+                  <h3>${movie.title}</h3>
+                  <span class="pill">${inferKind(movie.title)}</span>
+                </div>
+                <div class="movie-meta">
+                  <span class="pill">Year ${movie.year || "N/A"}</span>
+                  <span class="pill">IMDb ${movie.rating || "N/A"}</span>
+                </div>
+                <a class="button movie-link" href="${movie.link}" target="_blank" rel="noreferrer">Open Post</a>
+              </div>
             </div>
           `;
           movieList.appendChild(card);
@@ -366,12 +642,12 @@
         cronFailed.textContent = String(status?.failed ?? 0);
         cronDuration.textContent = status?.durationMs != null ? `${status.durationMs} ms` : "-";
         cronNewestId.textContent = status?.newestId || "-";
-        cronStatusText.textContent = status?.ok === false ? "Error" : "OK";
+        cronStatusText.textContent = status?.ok === false ? "Error" : "Healthy";
       }
 
       async function loadDashboard() {
         errorBox.style.display = "none";
-        botState.textContent = "Refreshing...";
+        botState.textContent = "Refreshing";
         botDot.classList.remove("offline");
 
         try {
@@ -381,7 +657,7 @@
             throw new Error(data.error || "Failed to load dashboard");
           }
 
-          botState.textContent = "Online";
+          botState.textContent = "Connected";
           channelCount.textContent = String(data.summary.channelCount ?? 0);
           lastScan.textContent = formatDate(data.summary.lastScanAt);
           lastMovieId.textContent = data.summary.lastNotifiedMovieId || "None";
