@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       },
       cronStatus,
       channels,
-      latest: latest.slice(0, 6).map((movie) => ({
+      latest: latest.slice(0, 10).map((movie) => ({
         id: movie.id,
         title: movie.title,
         year: movie.year,
@@ -47,3 +47,4 @@ export default async function handler(req, res) {
     });
   }
 }
+
