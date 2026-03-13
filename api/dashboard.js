@@ -49,6 +49,39 @@ function mapLatest(items) {
   }));
 }
 
+function getCronIntervalMinutes() {
+  const raw = Number.parseInt(String(process.env.CRON_INTERVAL_MINUTES || "30"), 10);
+  return Number.isFinite(raw) && raw > 0 ? raw : 30;
+}
+
+function buildScheduleInfo({ state, cronStatus }) {
+  const intervalMinutes = getCronIntervalMinutes();
+  const baseTimestamp = cronStatus?.timestamp || state?.lastScanAt || null;
+
+  if (!baseTimestamp) {
+    return {
+      intervalMinutes,
+      lastRunAt: null,
+      nextRunAt: null,
+    };
+  }
+
+  const date = new Date(baseTimestamp);
+  if (Number.isNaN(date.getTime())) {
+    return {
+      intervalMinutes,
+      lastRunAt: baseTimestamp,
+      nextRunAt: null,
+    };
+  }
+
+  return {
+    intervalMinutes,
+    lastRunAt: date.toISOString(),
+    nextRunAt: new Date(date.getTime() + intervalMinutes * 60 * 1000).toISOString(),
+  };
+}
+
 function summarizeSystemHealth(health, cronStatus) {
   const services = Object.values(health || {});
   const okCount = services.filter((item) => item?.ok).length;
@@ -108,6 +141,7 @@ export default async function handler(req, res) {
       discord: discordHealth,
     };
     const system = summarizeSystemHealth(health, cronStatus);
+    const schedule = buildScheduleInfo({ state, cronStatus });
 
     const payload = {
       ok: true,
@@ -117,6 +151,7 @@ export default async function handler(req, res) {
         lastNotifiedMovieId: state?.lastNotifiedMovieId ?? null,
       },
       system,
+      schedule,
       health,
       cronStatus,
       channels: Array.isArray(channels) ? channels : [],
@@ -130,6 +165,7 @@ export default async function handler(req, res) {
       paheOk: paheHealth.ok,
       discordOk: discordHealth.ok,
       systemOk: system.ok,
+      nextRunAt: schedule.nextRunAt,
     });
     return res.status(200).json(payload);
   } catch (error) {
