@@ -282,8 +282,9 @@
       }
 
       .summary-card .value {
-        font-size: clamp(1.6rem, 4vw, 2.45rem);
-        line-height: 1;
+        font-size: clamp(1.1rem, 2.8vw, 1.85rem);
+        line-height: 1.12;
+        word-break: break-word;
       }
 
       .summary-card .sub {
@@ -296,6 +297,7 @@
         display: grid;
         grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
         gap: 18px;
+        align-items: start;
       }
 
       .stack {
@@ -341,19 +343,64 @@
       }
 
       .metric-value {
-        font-size: 1.82rem;
-        line-height: 1;
+        font-size: 1.42rem;
+        line-height: 1.08;
       }
 
       .metric-copy {
-        margin-top: 8px;
+        margin-top: 7px;
         color: var(--muted);
-        font-size: 0.92rem;
+        font-size: 0.84rem;
       }
 
       .list {
         display: grid;
         gap: 10px;
+      }
+
+      .health-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .health-item {
+        padding: 14px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(168, 190, 220, 0.08);
+      }
+
+      .health-name {
+        margin: 0 0 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.13em;
+        font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+        font-size: 0.72rem;
+      }
+
+      .health-state {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+      }
+
+      .health-state.ok {
+        color: #99f6e4;
+      }
+
+      .health-state.fail {
+        color: #fca5a5;
+      }
+
+      .health-hint {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 0.8rem;
+        line-height: 1.35;
+        word-break: break-word;
       }
 
       .row {
@@ -480,6 +527,12 @@
         }
       }
 
+      @media (max-width: 920px) {
+        .health-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
       @media (max-width: 760px) {
         .wrap {
           width: min(100% - 16px, 100%);
@@ -591,11 +644,13 @@
             <div class="cron-board">
               <div class="metric"><div class="metric-label">Fetched Latest</div><div class="metric-value" id="cronFetchedLatest">-</div><div class="metric-copy">Latest posts fetched from pahe.ink</div></div>
               <div class="metric"><div class="metric-label">Today Count</div><div class="metric-value" id="cronTodayCount">-</div><div class="metric-copy">Posts matching current WIB date</div></div>
+              <div class="metric"><div class="metric-label">Queued</div><div class="metric-value" id="cronQueued">-</div><div class="metric-copy">Titles selected for this run</div></div>
               <div class="metric"><div class="metric-label">Notified</div><div class="metric-value" id="cronNotified">-</div><div class="metric-copy">Titles marked sent this run</div></div>
               <div class="metric"><div class="metric-label">Delivered</div><div class="metric-value" id="cronDelivered">-</div><div class="metric-copy">Messages delivered to Discord</div></div>
               <div class="metric"><div class="metric-label">Failed</div><div class="metric-value" id="cronFailed">-</div><div class="metric-copy">Failed channel deliveries</div></div>
               <div class="metric"><div class="metric-label">Duration</div><div class="metric-value" id="cronDuration">-</div><div class="metric-copy">Invocation time</div></div>
               <div class="metric"><div class="metric-label">Newest ID</div><div class="metric-value" id="cronNewestId">-</div><div class="metric-copy">Top newest post from fetch window</div></div>
+              <div class="metric"><div class="metric-label">Remaining</div><div class="metric-value" id="cronRemaining">-</div><div class="metric-copy">Today backlog for next runs</div></div>
             </div>
           </article>
 
@@ -614,6 +669,20 @@
           <article class="panel">
             <div class="panel-head">
               <div>
+                <p class="panel-title">Service Health</p>
+                <div class="panel-value">Current upstream status</div>
+              </div>
+            </div>
+            <div class="health-grid" id="healthGrid">
+              <div class="health-item"><div class="health-name">Redis</div><div class="health-state" id="healthRedis">-</div><div class="health-hint" id="healthRedisHint">-</div></div>
+              <div class="health-item"><div class="health-name">Pahe</div><div class="health-state" id="healthPahe">-</div><div class="health-hint" id="healthPaheHint">-</div></div>
+              <div class="health-item"><div class="health-name">Discord</div><div class="health-state" id="healthDiscord">-</div><div class="health-hint" id="healthDiscordHint">-</div></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div>
                 <p class="panel-title">Notification Channels</p>
                 <div class="panel-value">Guild to channel mapping</div>
               </div>
@@ -621,19 +690,6 @@
             <div class="list" id="channelList"></div>
           </article>
 
-          <article class="panel">
-            <div class="panel-head">
-              <div>
-                <p class="panel-title">Operating Notes</p>
-                <div class="panel-value">What the current build does</div>
-              </div>
-            </div>
-            <div class="list" id="notesList">
-              <div class="row"><span class="muted">Refresh untuk ambil state bot terbaru dari Redis dan feed pahe.ink.</span></div>
-              <div class="row"><span class="muted">Cron board menampilkan hasil run terakhir yang tersimpan dari <code>/api/cron</code>.</span></div>
-              <div class="row"><span class="muted">Dedupe disimpan per tanggal WIB dan otomatis expired.</span></div>
-            </div>
-          </article>
         </div>
       </section>
     </main>
@@ -652,12 +708,20 @@
       const cronTimestamp = document.getElementById("cronTimestamp");
       const cronFetchedLatest = document.getElementById("cronFetchedLatest");
       const cronTodayCount = document.getElementById("cronTodayCount");
+      const cronQueued = document.getElementById("cronQueued");
       const cronNotified = document.getElementById("cronNotified");
       const cronDelivered = document.getElementById("cronDelivered");
       const cronFailed = document.getElementById("cronFailed");
       const cronDuration = document.getElementById("cronDuration");
       const cronNewestId = document.getElementById("cronNewestId");
+      const cronRemaining = document.getElementById("cronRemaining");
       const cronStatusText = document.getElementById("cronStatusText");
+      const healthRedis = document.getElementById("healthRedis");
+      const healthRedisHint = document.getElementById("healthRedisHint");
+      const healthPahe = document.getElementById("healthPahe");
+      const healthPaheHint = document.getElementById("healthPaheHint");
+      const healthDiscord = document.getElementById("healthDiscord");
+      const healthDiscordHint = document.getElementById("healthDiscordHint");
 
       function formatDate(value) {
         if (!value) return "Never";
@@ -730,12 +794,21 @@
         cronTimestamp.textContent = formatDate(status?.timestamp);
         cronFetchedLatest.textContent = String(status?.fetchedLatest ?? 0);
         cronTodayCount.textContent = String(status?.todayCount ?? 0);
+        cronQueued.textContent = String(status?.queued ?? 0);
         cronNotified.textContent = String(status?.notifiedMovies ?? 0);
         cronDelivered.textContent = String(status?.delivered ?? 0);
         cronFailed.textContent = String(status?.failed ?? 0);
         cronDuration.textContent = status?.durationMs != null ? `${status.durationMs} ms` : "-";
         cronNewestId.textContent = status?.newestId || "-";
+        cronRemaining.textContent = String(status?.remaining ?? 0);
         cronStatusText.textContent = status?.ok === false ? "Error" : "Healthy";
+      }
+
+      function renderHealthItem(target, hintTarget, status) {
+        const ok = Boolean(status?.ok);
+        target.textContent = ok ? "OK" : "Error";
+        target.className = `health-state ${ok ? "ok" : "fail"}`;
+        hintTarget.textContent = status?.label || "-";
       }
 
       async function runCronNow() {
@@ -784,6 +857,9 @@
           lastScan.textContent = formatDate(data.summary.lastScanAt);
           lastMovieId.textContent = data.summary.lastNotifiedMovieId || "None";
           renderCronStatus(data.cronStatus || null);
+          renderHealthItem(healthRedis, healthRedisHint, data.health?.redis);
+          renderHealthItem(healthPahe, healthPaheHint, data.health?.pahe);
+          renderHealthItem(healthDiscord, healthDiscordHint, data.health?.discord);
           renderChannels(data.channels || []);
           renderMovies(data.latest || []);
         } catch (error) {
