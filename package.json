@@ -1,0 +1,10 @@
+{
+  "name": "pahe-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "register": "node discord.js",
+    "test": "node --test --test-isolation=none"
+  }
+}
