@@ -54,7 +54,7 @@ function getCronIntervalMinutes() {
   return Number.isFinite(raw) && raw > 0 ? raw : 30;
 }
 
-function buildScheduleInfo({ state, cronStatus }) {
+export function buildScheduleInfo({ state, cronStatus }) {
   const intervalMinutes = getCronIntervalMinutes();
   const baseTimestamp = cronStatus?.timestamp || state?.lastScanAt || null;
 
@@ -82,7 +82,7 @@ function buildScheduleInfo({ state, cronStatus }) {
   };
 }
 
-function summarizeSystemHealth(health, cronStatus) {
+export function summarizeSystemHealth(health, cronStatus) {
   const services = Object.values(health || {});
   const okCount = services.filter((item) => item?.ok).length;
   const hasFailures = okCount < services.length;
@@ -176,3 +176,4 @@ export default async function handler(req, res) {
     });
   }
 }
+

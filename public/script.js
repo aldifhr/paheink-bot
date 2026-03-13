@@ -263,18 +263,24 @@ function applySummary(summary = {}) {
   setText(elements.lastMovieId, summary.lastNotifiedMovieId || "None");
 }
 
-function deriveBotState(health = {}, cronStatus) {
-  const services = Object.values(health);
-  const hasFailures = services.some((item) => !item?.ok);
-  const hasCron = Boolean(cronStatus);
+function deriveBotState(system = {}, cronStatus) {
+  if (!cronStatus) {
+    return {
+      mode: system.ok === false ? "degraded" : "ok",
+      label: system.label || "Awaiting First Run",
+    };
+  }
 
-  if (!hasCron) {
-    return { mode: hasFailures ? "degraded" : "ok", label: "Awaiting First Run" };
+  if (system.ok === false || cronStatus.ok === false) {
+    return {
+      mode: "degraded",
+      label: system.label || "Degraded",
+    };
   }
 
   return {
-    mode: hasFailures ? "degraded" : "ok",
-    label: hasFailures ? "Degraded" : "Healthy",
+    mode: "ok",
+    label: system.label || "Healthy",
   };
 }
 
@@ -307,7 +313,7 @@ async function loadDashboard() {
 
   try {
     const data = await fetchJson("/api/dashboard", { cache: "no-store" });
-    const bot = deriveBotState(data.health, data.cronStatus);
+    const bot = deriveBotState(data.system, data.cronStatus);
 
     setBotState(bot.mode, bot.label);
     applySummary(data.summary);
@@ -325,3 +331,4 @@ async function loadDashboard() {
 elements.refreshBtn.addEventListener("click", loadDashboard);
 elements.runCronBtn.addEventListener("click", runCronNow);
 loadDashboard();
+

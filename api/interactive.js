@@ -31,7 +31,7 @@ async function getRawBody(req) {
   });
 }
 
-function parseJsonBody(rawBody) {
+export function parseJsonBody(rawBody) {
   try {
     return JSON.parse(rawBody);
   } catch {
@@ -39,7 +39,7 @@ function parseJsonBody(rawBody) {
   }
 }
 
-function componentErrorResponse(message) {
+export function componentErrorResponse(message) {
   return {
     type: InteractionResponseType.UPDATE_MESSAGE,
     data: {
@@ -123,3 +123,4 @@ export default async function handler(req, res) {
   logApiOk(reqLogger, { status: 200, command });
   return handlerFn(payload, options, res);
 }
+

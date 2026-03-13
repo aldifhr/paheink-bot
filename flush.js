@@ -30,8 +30,7 @@ async function collectKeysByPattern(pattern) {
 
 async function collectFlushKeys() {
   const notifiedKeys = await collectKeysByPattern(NOTIFIED_PATTERN);
-  const candidates = [...STATIC_KEYS, ...notifiedKeys];
-  return [...new Set(candidates)];
+  return [...new Set([...STATIC_KEYS, ...notifiedKeys])];
 }
 
 async function confirmFlush(keys) {
@@ -60,6 +59,38 @@ async function deleteKeys(keys) {
   return pipeline.exec();
 }
 
+function isDeleteResultSuccessful(result) {
+  if (typeof result === "number") {
+    return result >= 0;
+  }
+
+  if (Array.isArray(result)) {
+    return result.length > 0 && result[0] !== null && result[0] !== undefined;
+  }
+
+  if (result && typeof result === "object") {
+    return !result.error;
+  }
+
+  return false;
+}
+
+function summarizeDeleteResults(results, targetedKeys) {
+  if (!Array.isArray(results)) {
+    return {
+      targetedKeys,
+      successfulOps: null,
+      rawResultCount: 0,
+    };
+  }
+
+  return {
+    targetedKeys,
+    successfulOps: results.filter(isDeleteResultSuccessful).length,
+    rawResultCount: results.length,
+  };
+}
+
 async function main() {
   const keys = await collectFlushKeys();
 
@@ -79,10 +110,15 @@ async function main() {
   }
 
   const results = await deleteKeys(keys);
-  const deleted = results.reduce((count, item) => count + Number(item ?? 0), 0);
+  const summary = summarizeDeleteResults(results, keys.length);
 
-  console.log(`Deleted ${deleted} Redis key operation(s).`);
-  console.log(`Keys targeted: ${keys.length}`);
+  console.log(`Keys targeted: ${summary.targetedKeys}`);
+  if (summary.successfulOps == null) {
+    console.log("Delete requests sent, but result format was not recognized.");
+    return;
+  }
+
+  console.log(`Delete operations acknowledged: ${summary.successfulOps}/${summary.rawResultCount}`);
 }
 
 main().catch((error) => {
