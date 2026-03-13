@@ -27,3 +27,4 @@ Catatan:
 - Endpoint cron punya guard 24 jam. Kalau `/api/cron` dipanggil lagi sebelum 24 jam sejak scan terakhir, hasilnya akan di-skip.
 - Dashboard test membaca data dari `/api/dashboard` dan menampilkan status bot, channel notif, state scan, dan preview film terbaru.
 - Storage channel notif dan state cron sekarang memakai Upstash Redis via `UPSTASH_REDIS_REST_URL` dan `UPSTASH_REDIS_REST_TOKEN`, mengikuti pola dari `ikiru-bot`.
+- Flow interaction sekarang juga mengikuti pola `ikiru-bot`: verifikasi signature via `discord-interactions`, async follow-up via `@vercel/functions` `waitUntil`, dan retry untuk request REST Discord.

@@ -1,6 +1,6 @@
+import { verifyKey } from "discord-interactions";
 import { waitUntil } from "@vercel/functions";
 import { InteractionType, InteractionResponseType, MessageFlags } from "../lib/constants.js";
-import { verifyDiscordRequest } from "../lib/verifyDiscord.js";
 import {
   handleLatest,
   handleMovieSelect,
@@ -27,12 +27,12 @@ export default async function handler(req, res) {
   }
 
   const rawBody = await getRawBody(req);
-  const isValid = verifyDiscordRequest({
-    body: rawBody,
-    signature: req.headers["x-signature-ed25519"],
-    timestamp: req.headers["x-signature-timestamp"],
-    publicKey: process.env.DISCORD_PUBLIC_KEY,
-  });
+  const isValid = await verifyKey(
+    rawBody,
+    req.headers["x-signature-ed25519"],
+    req.headers["x-signature-timestamp"],
+    process.env.DISCORD_PUBLIC_KEY,
+  );
 
   if (!isValid) {
     return res.status(401).end("invalid request signature");
