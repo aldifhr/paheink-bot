@@ -4,18 +4,24 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>pahe-tracker dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
     <style>
       :root {
-        --bg: #f3efe6;
-        --ink: #1c1917;
-        --muted: #6b645c;
-        --panel: rgba(255, 251, 245, 0.82);
-        --panel-strong: rgba(255, 248, 239, 0.94);
-        --line: rgba(46, 37, 26, 0.12);
-        --teal: #0f766e;
-        --amber: #b45309;
-        --red: #b91c1c;
-        --shadow: 0 22px 60px rgba(53, 40, 24, 0.12);
+        --bg: #0b1220;
+        --ink: #edf3ff;
+        --muted: #9fb0ca;
+        --panel: rgba(13, 22, 36, 0.78);
+        --panel-strong: rgba(16, 27, 44, 0.92);
+        --line: rgba(168, 190, 220, 0.12);
+        --teal: #2dd4bf;
+        --amber: #f59e0b;
+        --red: #ef4444;
+        --shadow: 0 22px 60px rgba(2, 8, 23, 0.42);
       }
 
       * {
@@ -26,10 +32,10 @@
         margin: 0;
         color: var(--ink);
         background:
-          radial-gradient(circle at top left, rgba(15, 118, 110, 0.13), transparent 26%),
-          radial-gradient(circle at 88% 0%, rgba(180, 83, 9, 0.14), transparent 22%),
-          linear-gradient(180deg, #f8f4eb 0%, #efe6d7 100%);
-        font-family: "Georgia", "Times New Roman", serif;
+          radial-gradient(circle at top left, rgba(45, 212, 191, 0.16), transparent 26%),
+          radial-gradient(circle at 88% 0%, rgba(245, 158, 11, 0.14), transparent 22%),
+          linear-gradient(180deg, #08101d 0%, #0d1728 100%);
+        font-family: "Space Grotesk", "Segoe UI", sans-serif;
         min-height: 100vh;
       }
 
@@ -38,15 +44,68 @@
         position: fixed;
         inset: 0;
         pointer-events: none;
-        background-image: linear-gradient(rgba(28, 25, 23, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(28, 25, 23, 0.03) 1px, transparent 1px);
+        background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
         background-size: 28px 28px;
         mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.6), transparent 78%);
+      }
+
+      code,
+      .mono,
+      .kicker,
+      .metric-value,
+      .summary-card .value {
+        font-family: "JetBrains Mono", monospace;
       }
 
       .wrap {
         width: min(1280px, calc(100% - 28px));
         margin: 22px auto 36px;
         position: relative;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 14px;
+        align-items: center;
+        margin-bottom: 16px;
+        padding: 14px 18px;
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.04);
+        box-shadow: var(--shadow);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand-mark {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        background: linear-gradient(180deg, var(--teal), #0f766e);
+        box-shadow: 0 0 0 10px rgba(45, 212, 191, 0.1);
+      }
+
+      .brand-title {
+        font-weight: 700;
+        letter-spacing: -0.04em;
+      }
+
+      .brand-sub {
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
       }
 
       .hero {
@@ -120,8 +179,8 @@
         gap: 8px;
         padding: 9px 12px;
         border-radius: 999px;
-        border: 1px solid rgba(15, 118, 110, 0.16);
-        background: rgba(255, 255, 255, 0.5);
+        border: 1px solid rgba(45, 212, 191, 0.16);
+        background: rgba(255, 255, 255, 0.04);
         font-family: "Trebuchet MS", "Segoe UI", sans-serif;
         font-size: 0.84rem;
       }
@@ -147,8 +206,8 @@
         gap: 10px;
         padding: 10px 14px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.72);
-        border: 1px solid rgba(15, 118, 110, 0.14);
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(45, 212, 191, 0.14);
       }
 
       .dot {
@@ -174,7 +233,7 @@
       a.button {
         appearance: none;
         border: 1px solid rgba(28, 25, 23, 0.12);
-        background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(246, 238, 224, 0.96));
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
         color: var(--ink);
         padding: 11px 15px;
         border-radius: 999px;
@@ -185,9 +244,9 @@
       }
 
       button.primary {
-        background: linear-gradient(180deg, #155e75, #0f766e);
-        color: #f8fafc;
-        border-color: rgba(15, 118, 110, 0.35);
+        background: linear-gradient(180deg, #14b8a6, #0f766e);
+        color: #ecfeff;
+        border-color: rgba(45, 212, 191, 0.35);
       }
 
       .mini-note {
@@ -277,8 +336,8 @@
         min-height: 106px;
         border-radius: 22px;
         padding: 16px;
-        background: linear-gradient(180deg, rgba(255,255,255,0.72), rgba(249, 241, 229, 0.92));
-        border: 1px solid rgba(28, 25, 23, 0.08);
+        background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+        border: 1px solid rgba(168, 190, 220, 0.08);
       }
 
       .metric-value {
@@ -304,8 +363,8 @@
         align-items: start;
         padding: 14px 15px;
         border-radius: 18px;
-        background: rgba(255, 255, 255, 0.55);
-        border: 1px solid rgba(28, 25, 23, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(168, 190, 220, 0.08);
       }
 
       .row strong {
@@ -338,7 +397,7 @@
         height: 100%;
         object-fit: cover;
         display: block;
-        background: #d6d3d1;
+        background: #111827;
       }
 
       .movie-body {
@@ -346,7 +405,7 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
-        background: linear-gradient(180deg, rgba(255, 252, 247, 0.96), rgba(244, 236, 223, 0.92));
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
       }
 
       .movie-head {
@@ -373,8 +432,8 @@
         align-items: center;
         padding: 5px 10px;
         border-radius: 999px;
-        border: 1px solid rgba(15, 118, 110, 0.16);
-        background: rgba(15, 118, 110, 0.06);
+        border: 1px solid rgba(45, 212, 191, 0.16);
+        background: rgba(45, 212, 191, 0.08);
         font-family: "Trebuchet MS", "Segoe UI", sans-serif;
         font-size: 0.78rem;
       }
@@ -388,12 +447,17 @@
         margin-bottom: 18px;
         padding: 14px 16px;
         border-radius: 18px;
-        color: #7c2d12;
-        background: rgba(249, 115, 22, 0.1);
+        color: #fed7aa;
+        background: rgba(249, 115, 22, 0.12);
         border: 1px solid rgba(249, 115, 22, 0.24);
       }
 
       @media (max-width: 1120px) {
+        .topbar {
+          align-items: start;
+          flex-direction: column;
+        }
+
         .hero,
         .layout {
           grid-template-columns: 1fr;
@@ -437,6 +501,21 @@
   </head>
   <body>
     <main class="wrap">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark"></span>
+          <div>
+            <div class="brand-title">Pahe Monitor</div>
+            <div class="brand-sub">Discord Release Operations</div>
+          </div>
+        </div>
+        <div class="toolbar">
+          <span class="mini-note mono">/api/dashboard</span>
+          <button id="refreshBtn" class="primary" type="button">Refresh Dashboard</button>
+          <a class="button" href="/api/dashboard" target="_blank" rel="noreferrer">Open JSON</a>
+        </div>
+      </header>
+
       <section class="hero">
         <article class="hero-main">
           <p class="eyebrow">Pahe Feed Monitor</p>
@@ -456,10 +535,6 @@
               <div class="status-pill"><span id="botDot" class="dot"></span><span id="botState">Loading...</span></div>
             </div>
             <div class="mini-note">Latest state from `/api/dashboard`</div>
-          </div>
-          <div class="actions">
-            <button id="refreshBtn" class="primary" type="button">Refresh Dashboard</button>
-            <a class="button" href="/api/dashboard" target="_blank" rel="noreferrer">Open JSON</a>
           </div>
           <div class="mini-note">Cron scan stores state in Redis and only pushes titles dated for the current WIB day.</div>
         </aside>
