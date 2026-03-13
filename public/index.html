@@ -438,6 +438,18 @@
         font-size: 0.78rem;
       }
 
+      .pill.movie {
+        border-color: rgba(56, 189, 248, 0.2);
+        background: rgba(56, 189, 248, 0.1);
+        color: #bae6fd;
+      }
+
+      .pill.series {
+        border-color: rgba(45, 212, 191, 0.22);
+        background: rgba(45, 212, 191, 0.1);
+        color: #99f6e4;
+      }
+
       .movie-link {
         margin-top: auto;
       }
@@ -511,6 +523,7 @@
         </div>
         <div class="toolbar">
           <span class="mini-note mono">/api/dashboard</span>
+          <button id="runCronBtn" class="button" type="button">Run Cron Now</button>
           <button id="refreshBtn" class="primary" type="button">Refresh Dashboard</button>
           <a class="button" href="/api/dashboard" target="_blank" rel="noreferrer">Open JSON</a>
         </div>
@@ -635,6 +648,7 @@
       const movieList = document.getElementById("movieList");
       const errorBox = document.getElementById("errorBox");
       const refreshBtn = document.getElementById("refreshBtn");
+      const runCronBtn = document.getElementById("runCronBtn");
       const cronTimestamp = document.getElementById("cronTimestamp");
       const cronFetchedLatest = document.getElementById("cronFetchedLatest");
       const cronTodayCount = document.getElementById("cronTodayCount");
@@ -658,6 +672,10 @@
 
       function inferKind(title) {
         return /season|episode|eps|complete/i.test(String(title || "")) ? "Series" : "Movie";
+      }
+
+      function inferKindClass(title) {
+        return inferKind(title).toLowerCase();
       }
 
       function renderChannels(channels) {
@@ -694,7 +712,7 @@
               <div class="movie-body">
                 <div class="movie-head">
                   <h3>${movie.title}</h3>
-                  <span class="pill">${inferKind(movie.title)}</span>
+                  <span class="pill ${inferKindClass(movie.title)}">${inferKind(movie.title)}</span>
                 </div>
                 <div class="movie-meta">
                   <span class="pill">Year ${movie.year || "N/A"}</span>
@@ -718,6 +736,35 @@
         cronDuration.textContent = status?.durationMs != null ? `${status.durationMs} ms` : "-";
         cronNewestId.textContent = status?.newestId || "-";
         cronStatusText.textContent = status?.ok === false ? "Error" : "Healthy";
+      }
+
+      async function runCronNow() {
+        const secret = window.prompt("Masukkan CRON_SECRET untuk jalankan cron sekarang:");
+        if (!secret) return;
+
+        runCronBtn.disabled = true;
+        runCronBtn.textContent = "Running...";
+        errorBox.style.display = "none";
+
+        try {
+          const response = await fetch("/api/cron", {
+            method: "GET",
+            headers: { Authorization: `Bearer ${secret}` },
+            cache: "no-store"
+          });
+          const data = await response.json();
+          if (!response.ok || !data.ok) {
+            throw new Error(data.error || "Cron run failed");
+          }
+
+          await loadDashboard();
+        } catch (error) {
+          errorBox.textContent = error.message;
+          errorBox.style.display = "block";
+        } finally {
+          runCronBtn.disabled = false;
+          runCronBtn.textContent = "Run Cron Now";
+        }
       }
 
       async function loadDashboard() {
@@ -748,6 +795,7 @@
       }
 
       refreshBtn.addEventListener("click", loadDashboard);
+      runCronBtn.addEventListener("click", runCronNow);
       loadDashboard();
     </script>
   </body>
