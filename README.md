@@ -16,11 +16,14 @@ Alur pakai:
 2. Arahkan Discord Interaction Endpoint ke `/api/interactive`.
 3. Isi `.env` berdasarkan `.env.example`.
 4. Set channel dengan `/setchannel`.
-5. Cron akan hit `/api/cron` tiap 15 menit.
+5. Jadwalkan FastCron ke `/api/cron` 1x sehari.
+6. Buka `/` untuk dashboard test sederhana.
 
 Bot ini mengambil data film dari endpoint WordPress JSON `pahe.ink`, lalu mem-parse detail dan link download dari konten post.
 
 Catatan:
 
 - Tidak ada whitelist. Semua film baru dari hasil scan terbaru akan dibroadcast ke channel yang sudah diset.
-- Penyimpanan channel dan state cron saat ini berbasis file di folder `data/`. Cocok untuk lokal atau server persisten, tapi bukan penyimpanan ideal untuk serverless production.
+- Endpoint cron punya guard 24 jam. Kalau `/api/cron` dipanggil lagi sebelum 24 jam sejak scan terakhir, hasilnya akan di-skip.
+- Dashboard test membaca data dari `/api/dashboard` dan menampilkan status bot, channel notif, state scan, dan preview film terbaru.
+- Storage channel notif dan state cron sekarang memakai Upstash Redis via `UPSTASH_REDIS_REST_URL` dan `UPSTASH_REDIS_REST_TOKEN`, mengikuti pola dari `ikiru-bot`.

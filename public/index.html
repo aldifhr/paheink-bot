@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pahe-tracker dashboard</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #131a2b;
+        --panel-2: #1a243a;
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #eef2ff;
+        --muted: #97a4c2;
+        --accent: #22c55e;
+        --accent-2: #38bdf8;
+        --danger: #f97316;
+        --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(56, 189, 248, 0.22), transparent 28%),
+          radial-gradient(circle at top right, rgba(34, 197, 94, 0.18), transparent 24%),
+          linear-gradient(180deg, #0a0f1d 0%, #0f172a 100%);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        width: min(1100px, calc(100% - 32px));
+        margin: 32px auto 48px;
+      }
+
+      .hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: end;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+        letter-spacing: -0.04em;
+      }
+
+      .muted { color: var(--muted); }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button, a.button {
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, rgba(56, 189, 248, 0.18), rgba(56, 189, 248, 0.08));
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        text-decoration: none;
+        font: inherit;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        gap: 16px;
+      }
+
+      .card {
+        background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow);
+        border-radius: 22px;
+        padding: 18px;
+      }
+
+      .stat { grid-column: span 4; }
+      .wide { grid-column: span 12; }
+      .half { grid-column: span 6; }
+
+      .label {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-size: 0.72rem;
+        margin-bottom: 12px;
+      }
+
+      .value {
+        font-size: clamp(1.5rem, 3vw, 2.4rem);
+        line-height: 1.05;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.95rem;
+      }
+
+      .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.12);
+      }
+
+      .list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.035);
+        border: 1px solid rgba(255,255,255,0.05);
+      }
+
+      .movies {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .movie {
+        background: var(--panel-2);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .movie img {
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+        display: block;
+        background: #0f172a;
+      }
+
+      .movie .body {
+        padding: 12px;
+      }
+
+      .movie h3 {
+        margin: 0 0 6px;
+        font-size: 1rem;
+      }
+
+      .pill {
+        display: inline-block;
+        padding: 4px 9px;
+        border-radius: 999px;
+        border: 1px solid rgba(56, 189, 248, 0.24);
+        color: #bae6fd;
+        font-size: 0.78rem;
+      }
+
+      .error {
+        color: #fed7aa;
+        background: rgba(249, 115, 22, 0.14);
+        border: 1px solid rgba(249, 115, 22, 0.35);
+        padding: 12px 14px;
+        border-radius: 16px;
+        display: none;
+        margin-bottom: 16px;
+      }
+
+      @media (max-width: 820px) {
+        .stat, .half, .wide { grid-column: span 12; }
+        .movies { grid-template-columns: 1fr; }
+        .hero { align-items: start; flex-direction: column; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="wrap">
+      <section class="hero">
+        <div>
+          <p class="muted">Simple test dashboard</p>
+          <h1>pahe-tracker</h1>
+        </div>
+        <div class="actions">
+          <button id="refreshBtn" type="button">Refresh</button>
+          <a class="button" href="/api/dashboard" target="_blank" rel="noreferrer">Open JSON</a>
+        </div>
+      </section>
+
+      <div id="errorBox" class="error"></div>
+
+      <section class="grid">
+        <article class="card stat">
+          <div class="label">Bot State</div>
+          <div class="status"><span class="dot"></span><span id="botState">Loading...</span></div>
+        </article>
+        <article class="card stat">
+          <div class="label">Registered Channels</div>
+          <div class="value" id="channelCount">-</div>
+        </article>
+        <article class="card stat">
+          <div class="label">Last Scan</div>
+          <div class="value" id="lastScan">-</div>
+        </article>
+
+        <article class="card half">
+          <div class="label">Last Notified Movie ID</div>
+          <div class="value" id="lastMovieId">-</div>
+        </article>
+
+        <article class="card half">
+          <div class="label">Notification Channels</div>
+          <div class="list" id="channelList"></div>
+        </article>
+
+        <article class="card wide">
+          <div class="label">Latest Movies Preview</div>
+          <div class="movies" id="movieList"></div>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const botState = document.getElementById("botState");
+      const channelCount = document.getElementById("channelCount");
+      const lastScan = document.getElementById("lastScan");
+      const lastMovieId = document.getElementById("lastMovieId");
+      const channelList = document.getElementById("channelList");
+      const movieList = document.getElementById("movieList");
+      const errorBox = document.getElementById("errorBox");
+      const refreshBtn = document.getElementById("refreshBtn");
+
+      function formatDate(value) {
+        if (!value) return "Never";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return value;
+        return new Intl.DateTimeFormat("id-ID", {
+          dateStyle: "medium",
+          timeStyle: "short",
+          timeZone: "Asia/Jakarta"
+        }).format(date) + " WIB";
+      }
+
+      function renderChannels(channels) {
+        channelList.innerHTML = "";
+        if (!channels.length) {
+          channelList.innerHTML = '<div class="row"><span class="muted">Belum ada channel</span></div>';
+          return;
+        }
+
+        for (const item of channels) {
+          const row = document.createElement("div");
+          row.className = "row";
+          row.innerHTML = `
+            <span>Guild <strong>${item.guildId}</strong></span>
+            <span class="muted">#${item.channelId}</span>
+          `;
+          channelList.appendChild(row);
+        }
+      }
+
+      function renderMovies(movies) {
+        movieList.innerHTML = "";
+        if (!movies.length) {
+          movieList.innerHTML = '<div class="row"><span class="muted">Belum ada preview film</span></div>';
+          return;
+        }
+
+        for (const movie of movies) {
+          const card = document.createElement("article");
+          card.className = "movie";
+          card.innerHTML = `
+            <img src="${movie.poster || "https://placehold.co/600x800/0f172a/e2e8f0?text=No+Poster"}" alt="${movie.title}">
+            <div class="body">
+              <h3>${movie.title}</h3>
+              <p class="muted">${movie.year || "Unknown year"}</p>
+              <p><span class="pill">IMDb ${movie.rating || "N/A"}</span></p>
+              <p><a class="button" href="${movie.link}" target="_blank" rel="noreferrer">Open Post</a></p>
+            </div>
+          `;
+          movieList.appendChild(card);
+        }
+      }
+
+      async function loadDashboard() {
+        errorBox.style.display = "none";
+        botState.textContent = "Refreshing...";
+
+        try {
+          const response = await fetch("/api/dashboard", { cache: "no-store" });
+          const data = await response.json();
+          if (!response.ok || !data.ok) {
+            throw new Error(data.error || "Failed to load dashboard");
+          }
+
+          botState.textContent = "Online";
+          channelCount.textContent = String(data.summary.channelCount ?? 0);
+          lastScan.textContent = formatDate(data.summary.lastScanAt);
+          lastMovieId.textContent = data.summary.lastNotifiedMovieId || "None";
+          renderChannels(data.channels || []);
+          renderMovies(data.latest || []);
+        } catch (error) {
+          botState.textContent = "Error";
+          errorBox.textContent = error.message;
+          errorBox.style.display = "block";
+        }
+      }
+
+      refreshBtn.addEventListener("click", loadDashboard);
+      loadDashboard();
+    </script>
+  </body>
+</html>
