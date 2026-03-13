@@ -1,26 +1,37 @@
-﻿import { runLatestMovieCheck } from "../lib/notifier.js";
+import { runLatestMovieCheck } from "../lib/notifier.js";
+import { methodNotAllowed, unauthorized } from "../lib/apiResponses.js";
 import { logApiError, logApiHit, logApiOk } from "../lib/requestLog.js";
+
+function isAuthorizedCronRequest(req) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return true;
+  }
+
+  return (req.headers.authorization || "") === `Bearer ${cronSecret}`;
+}
 
 export default async function handler(req, res) {
   const reqLogger = logApiHit("cron", req);
 
   if (req.method !== "GET") {
-    logApiOk(reqLogger, { status: 405 });
-    return res.status(405).end();
+    return methodNotAllowed(reqLogger, res, logApiOk, "GET");
   }
 
-  const cronSecret = process.env.CRON_SECRET;
-  if (cronSecret) {
-    const authHeader = req.headers.authorization || "";
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      logApiOk(reqLogger, { status: 401, reason: "unauthorized" });
-      return res.status(401).json({ error: "unauthorized" });
-    }
+  if (!isAuthorizedCronRequest(req)) {
+    return unauthorized(reqLogger, res, logApiOk);
   }
 
   try {
     const result = await runLatestMovieCheck();
-    logApiOk(reqLogger, { status: 200, fetchedLatest: result.fetchedLatest, todayCount: result.todayCount, notified: result.notifiedMovies, delivered: result.delivered, failed: result.failed });
+    logApiOk(reqLogger, {
+      status: 200,
+      fetchedLatest: result.fetchedLatest,
+      todayCount: result.todayCount,
+      notified: result.notifiedMovies,
+      delivered: result.delivered,
+      failed: result.failed,
+    });
     return res.status(200).json({
       ok: true,
       ...result,

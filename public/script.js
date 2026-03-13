@@ -1,49 +1,86 @@
-const botState = document.getElementById("botState");
-const botDot = document.getElementById("botDot");
-const channelCount = document.getElementById("channelCount");
-const lastScan = document.getElementById("lastScan");
-const lastMovieId = document.getElementById("lastMovieId");
-const channelList = document.getElementById("channelList");
-const movieList = document.getElementById("movieList");
-const errorBox = document.getElementById("errorBox");
-const refreshBtn = document.getElementById("refreshBtn");
-const runCronBtn = document.getElementById("runCronBtn");
-const cronTimestamp = document.getElementById("cronTimestamp");
-const cronFetchedLatest = document.getElementById("cronFetchedLatest");
-const cronTodayCount = document.getElementById("cronTodayCount");
-const cronQueued = document.getElementById("cronQueued");
-const cronNotified = document.getElementById("cronNotified");
-const cronDelivered = document.getElementById("cronDelivered");
-const cronFailed = document.getElementById("cronFailed");
-const cronDuration = document.getElementById("cronDuration");
-const cronNewestId = document.getElementById("cronNewestId");
-const cronRemaining = document.getElementById("cronRemaining");
-const cronStatusText = document.getElementById("cronStatusText");
-const cronNextRun = document.getElementById("cronNextRun");
-const healthRedis = document.getElementById("healthRedis");
-const healthRedisHint = document.getElementById("healthRedisHint");
-const healthPahe = document.getElementById("healthPahe");
-const healthPaheHint = document.getElementById("healthPaheHint");
-const healthDiscord = document.getElementById("healthDiscord");
-const healthDiscordHint = document.getElementById("healthDiscordHint");
+const DATE_FORMATTER = new Intl.DateTimeFormat("id-ID", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "Asia/Jakarta",
+});
+
+const CRON_DEFAULTS = {
+  timestamp: "Never",
+  fetchedLatest: "0",
+  todayCount: "0",
+  queued: "0",
+  notifiedMovies: "0",
+  delivered: "0",
+  failed: "0",
+  durationMs: "-",
+  newestId: "-",
+  remaining: "0",
+  statusText: "Never Run",
+  nextRunText: "Next run: -",
+};
+
+const elements = {
+  botState: document.getElementById("botState"),
+  botDot: document.getElementById("botDot"),
+  channelCount: document.getElementById("channelCount"),
+  lastScan: document.getElementById("lastScan"),
+  lastMovieId: document.getElementById("lastMovieId"),
+  channelList: document.getElementById("channelList"),
+  movieList: document.getElementById("movieList"),
+  errorBox: document.getElementById("errorBox"),
+  refreshBtn: document.getElementById("refreshBtn"),
+  runCronBtn: document.getElementById("runCronBtn"),
+  cronTimestamp: document.getElementById("cronTimestamp"),
+  cronFetchedLatest: document.getElementById("cronFetchedLatest"),
+  cronTodayCount: document.getElementById("cronTodayCount"),
+  cronQueued: document.getElementById("cronQueued"),
+  cronNotified: document.getElementById("cronNotified"),
+  cronDelivered: document.getElementById("cronDelivered"),
+  cronFailed: document.getElementById("cronFailed"),
+  cronDuration: document.getElementById("cronDuration"),
+  cronNewestId: document.getElementById("cronNewestId"),
+  cronRemaining: document.getElementById("cronRemaining"),
+  cronStatusText: document.getElementById("cronStatusText"),
+  cronNextRun: document.getElementById("cronNextRun"),
+};
+
+const healthElements = {
+  redis: {
+    value: document.getElementById("healthRedis"),
+    hint: document.getElementById("healthRedisHint"),
+  },
+  pahe: {
+    value: document.getElementById("healthPahe"),
+    hint: document.getElementById("healthPaheHint"),
+  },
+  discord: {
+    value: document.getElementById("healthDiscord"),
+    hint: document.getElementById("healthDiscordHint"),
+  },
+};
+
+const cronMetricElements = {
+  timestamp: elements.cronTimestamp,
+  fetchedLatest: elements.cronFetchedLatest,
+  todayCount: elements.cronTodayCount,
+  queued: elements.cronQueued,
+  notifiedMovies: elements.cronNotified,
+  delivered: elements.cronDelivered,
+  failed: elements.cronFailed,
+  durationMs: elements.cronDuration,
+  newestId: elements.cronNewestId,
+  remaining: elements.cronRemaining,
+};
 
 function formatDate(value) {
   if (!value) return "Never";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("id-ID", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "Asia/Jakarta"
-  }).format(date) + " WIB";
+  return `${DATE_FORMATTER.format(date)} WIB`;
 }
 
 function inferKind(title) {
   return /season|episode|eps|complete/i.test(String(title || "")) ? "Series" : "Movie";
-}
-
-function inferKindClass(title) {
-  return inferKind(title).toLowerCase();
 }
 
 function setText(target, value, fallback = "-") {
@@ -71,20 +108,24 @@ function createElement(tag, className, text) {
   return node;
 }
 
-function setBotState(mode, label) {
-  botDot.classList.remove("offline", "degraded");
-  if (mode === "error") {
-    botDot.classList.add("offline");
-  } else if (mode === "degraded") {
-    botDot.classList.add("degraded");
-  }
-  botState.textContent = label;
+function renderEmptyState(target, message) {
+  target.innerHTML = `<div class="row"><span class="muted">${message}</span></div>`;
 }
 
-function renderChannels(channels) {
-  channelList.innerHTML = "";
+function setBotState(mode, label) {
+  elements.botDot.classList.remove("offline", "degraded");
+  if (mode === "error") {
+    elements.botDot.classList.add("offline");
+  } else if (mode === "degraded") {
+    elements.botDot.classList.add("degraded");
+  }
+  elements.botState.textContent = label;
+}
+
+function renderChannels(channels = []) {
+  elements.channelList.innerHTML = "";
   if (!channels.length) {
-    channelList.innerHTML = '<div class="row"><span class="muted">Belum ada channel notifikasi yang tersimpan.</span></div>';
+    renderEmptyState(elements.channelList, "Belum ada channel notifikasi yang tersimpan.");
     return;
   }
 
@@ -95,159 +136,192 @@ function renderChannels(channels) {
     left.appendChild(createElement("strong", "", item.guildId || "-"));
     const right = createElement("span", "muted", item.channelId ? `#${item.channelId}` : "-");
     row.append(left, right);
-    channelList.appendChild(row);
+    elements.channelList.appendChild(row);
   }
 }
 
-function renderMovies(movies) {
-  movieList.innerHTML = "";
+function createMovieCard(movie) {
+  const card = createElement("article", "movie");
+  const inner = createElement("div", "movie-inner");
+  const body = createElement("div", "movie-body");
+  const head = createElement("div", "movie-head");
+  const meta = createElement("div", "movie-meta");
+  const kind = inferKind(movie.title);
+
+  const img = document.createElement("img");
+  img.src = safeUrl(movie.poster, "https://placehold.co/600x800/e7dcc9/3f3a35?text=No+Poster");
+  img.alt = String(movie.title || "No title");
+
+  head.append(
+    createElement("h3", "", movie.title || "Untitled"),
+    createElement("span", `pill ${kind.toLowerCase()}`, kind),
+  );
+
+  meta.append(
+    createElement("span", "pill", `Year ${movie.year || "N/A"}`),
+    createElement("span", "pill", `IMDb ${movie.rating || "N/A"}`),
+  );
+
+  const link = createElement("a", "button movie-link", "Open Post");
+  link.href = safeUrl(movie.link);
+  link.target = "_blank";
+  link.rel = "noreferrer";
+
+  body.append(head, meta, link);
+  inner.append(img, body);
+  card.appendChild(inner);
+  return card;
+}
+
+function renderMovies(movies = []) {
+  elements.movieList.innerHTML = "";
   if (!movies.length) {
-    movieList.innerHTML = '<div class="row"><span class="muted">Belum ada preview title.</span></div>';
+    renderEmptyState(elements.movieList, "Belum ada preview title.");
     return;
   }
 
   for (const movie of movies) {
-    const card = createElement("article", "movie");
-    const inner = createElement("div", "movie-inner");
-    const img = document.createElement("img");
-    img.src = safeUrl(movie.poster, "https://placehold.co/600x800/e7dcc9/3f3a35?text=No+Poster");
-    img.alt = String(movie.title || "No title");
-
-    const body = createElement("div", "movie-body");
-    const head = createElement("div", "movie-head");
-    const title = createElement("h3", "", movie.title || "Untitled");
-    const kind = createElement("span", `pill ${inferKindClass(movie.title)}`, inferKind(movie.title));
-    head.append(title, kind);
-
-    const meta = createElement("div", "movie-meta");
-    meta.append(
-      createElement("span", "pill", `Year ${movie.year || "N/A"}`),
-      createElement("span", "pill", `IMDb ${movie.rating || "N/A"}`),
-    );
-
-    const link = createElement("a", "button movie-link", "Open Post");
-    link.href = safeUrl(movie.link);
-    link.target = "_blank";
-    link.rel = "noreferrer";
-
-    body.append(head, meta, link);
-    inner.append(img, body);
-    card.appendChild(inner);
-    movieList.appendChild(card);
+    elements.movieList.appendChild(createMovieCard(movie));
   }
 }
 
 function renderCronStatus(status) {
   if (!status) {
-    setText(cronTimestamp, "Never");
-    setText(cronFetchedLatest, "0");
-    setText(cronTodayCount, "0");
-    setText(cronQueued, "0");
-    setText(cronNotified, "0");
-    setText(cronDelivered, "0");
-    setText(cronFailed, "0");
-    setText(cronDuration, "-");
-    setText(cronNewestId, "-");
-    setText(cronRemaining, "0");
-    setText(cronStatusText, "Never Run");
-    setText(cronNextRun, "Next run: -");
+    setText(cronMetricElements.timestamp, CRON_DEFAULTS.timestamp);
+    setText(cronMetricElements.fetchedLatest, CRON_DEFAULTS.fetchedLatest);
+    setText(cronMetricElements.todayCount, CRON_DEFAULTS.todayCount);
+    setText(cronMetricElements.queued, CRON_DEFAULTS.queued);
+    setText(cronMetricElements.notifiedMovies, CRON_DEFAULTS.notifiedMovies);
+    setText(cronMetricElements.delivered, CRON_DEFAULTS.delivered);
+    setText(cronMetricElements.failed, CRON_DEFAULTS.failed);
+    setText(cronMetricElements.durationMs, CRON_DEFAULTS.durationMs);
+    setText(cronMetricElements.newestId, CRON_DEFAULTS.newestId);
+    setText(cronMetricElements.remaining, CRON_DEFAULTS.remaining);
+    setText(elements.cronStatusText, CRON_DEFAULTS.statusText);
+    setText(elements.cronNextRun, CRON_DEFAULTS.nextRunText);
     return;
   }
 
-  cronTimestamp.textContent = formatDate(status?.timestamp);
-  cronFetchedLatest.textContent = String(status?.fetchedLatest ?? 0);
-  cronTodayCount.textContent = String(status?.todayCount ?? 0);
-  cronQueued.textContent = String(status?.queued ?? 0);
-  cronNotified.textContent = String(status?.notifiedMovies ?? 0);
-  cronDelivered.textContent = String(status?.delivered ?? 0);
-  cronFailed.textContent = String(status?.failed ?? 0);
-  cronDuration.textContent = status?.durationMs != null ? `${status.durationMs} ms` : "-";
-  cronNewestId.textContent = status?.newestId || "-";
-  cronRemaining.textContent = String(status?.remaining ?? 0);
-  cronStatusText.textContent = status?.ok === false ? "Error" : "Healthy";
+  setText(cronMetricElements.timestamp, formatDate(status.timestamp));
+  setText(cronMetricElements.fetchedLatest, status.fetchedLatest ?? 0);
+  setText(cronMetricElements.todayCount, status.todayCount ?? 0);
+  setText(cronMetricElements.queued, status.queued ?? 0);
+  setText(cronMetricElements.notifiedMovies, status.notifiedMovies ?? 0);
+  setText(cronMetricElements.delivered, status.delivered ?? 0);
+  setText(cronMetricElements.failed, status.failed ?? 0);
+  setText(cronMetricElements.durationMs, status.durationMs != null ? `${status.durationMs} ms` : "-");
+  setText(cronMetricElements.newestId, status.newestId || "-");
+  setText(cronMetricElements.remaining, status.remaining ?? 0);
+  setText(elements.cronStatusText, status.ok === false ? "Error" : "Healthy");
 }
 
-function renderHealthItem(target, hintTarget, status) {
-  const ok = Boolean(status?.ok);
-  target.textContent = ok ? "OK" : "Error";
-  target.className = `health-state ${ok ? "ok" : "fail"}`;
-  hintTarget.textContent = status?.label || "-";
+function renderHealth(statusMap = {}) {
+  for (const [key, refs] of Object.entries(healthElements)) {
+    const status = statusMap[key];
+    const ok = Boolean(status?.ok);
+    refs.value.textContent = ok ? "OK" : "Error";
+    refs.value.className = `health-state ${ok ? "ok" : "fail"}`;
+    refs.hint.textContent = status?.label || "-";
+  }
 }
 
 function renderSchedule(schedule) {
   if (!schedule?.nextRunAt) {
-    cronNextRun.textContent = "Next run: -";
+    setText(elements.cronNextRun, CRON_DEFAULTS.nextRunText);
     return;
   }
 
-  const intervalText = schedule?.intervalMinutes ? ` (${schedule.intervalMinutes}m)` : "";
-  cronNextRun.textContent = `Next run: ${formatDate(schedule.nextRunAt)}${intervalText}`;
+  const intervalText = schedule.intervalMinutes ? ` (${schedule.intervalMinutes}m)` : "";
+  setText(elements.cronNextRun, `Next run: ${formatDate(schedule.nextRunAt)}${intervalText}`);
+}
+
+function setError(message) {
+  setText(elements.cronNextRun, CRON_DEFAULTS.nextRunText);
+  elements.errorBox.textContent = message;
+  elements.errorBox.style.display = "block";
+}
+
+function clearError() {
+  elements.errorBox.style.display = "none";
+  elements.errorBox.textContent = "";
+}
+
+async function fetchJson(url, options) {
+  const response = await fetch(url, options);
+  const data = await response.json();
+
+  if (!response.ok || !data.ok) {
+    throw new Error(data.error || `Request failed: ${response.status}`);
+  }
+
+  return data;
+}
+
+function applySummary(summary = {}) {
+  setText(elements.channelCount, summary.channelCount ?? 0);
+  setText(elements.lastScan, formatDate(summary.lastScanAt));
+  setText(elements.lastMovieId, summary.lastNotifiedMovieId || "None");
+}
+
+function deriveBotState(health = {}, cronStatus) {
+  const services = Object.values(health);
+  const hasFailures = services.some((item) => !item?.ok);
+  const hasCron = Boolean(cronStatus);
+
+  if (!hasCron) {
+    return { mode: hasFailures ? "degraded" : "ok", label: "Awaiting First Run" };
+  }
+
+  return {
+    mode: hasFailures ? "degraded" : "ok",
+    label: hasFailures ? "Degraded" : "Healthy",
+  };
 }
 
 async function runCronNow() {
   const secret = window.prompt("Masukkan CRON_SECRET untuk jalankan cron sekarang:");
   if (!secret) return;
 
-  runCronBtn.disabled = true;
-  runCronBtn.textContent = "Running...";
-  errorBox.style.display = "none";
+  elements.runCronBtn.disabled = true;
+  elements.runCronBtn.textContent = "Running...";
+  clearError();
 
   try {
-    const response = await fetch("/api/cron", {
+    await fetchJson("/api/cron", {
       method: "GET",
       headers: { Authorization: `Bearer ${secret}` },
-      cache: "no-store"
+      cache: "no-store",
     });
-    const data = await response.json();
-    if (!response.ok || !data.ok) {
-      throw new Error(data.error || "Cron run failed");
-    }
-
     await loadDashboard();
   } catch (error) {
-    cronNextRun.textContent = "Next run: -";
-    errorBox.textContent = error.message;
-    errorBox.style.display = "block";
+    setError(error.message);
   } finally {
-    runCronBtn.disabled = false;
-    runCronBtn.textContent = "Run Cron Now";
+    elements.runCronBtn.disabled = false;
+    elements.runCronBtn.textContent = "Run Cron Now";
   }
 }
 
 async function loadDashboard() {
-  errorBox.style.display = "none";
+  clearError();
   setBotState("loading", "Refreshing");
 
   try {
-    const response = await fetch("/api/dashboard", { cache: "no-store" });
-    const data = await response.json();
-    if (!response.ok || !data.ok) {
-      throw new Error(data.error || "Failed to load dashboard");
-    }
+    const data = await fetchJson("/api/dashboard", { cache: "no-store" });
+    const bot = deriveBotState(data.health, data.cronStatus);
 
-    const services = [data.health?.redis, data.health?.pahe, data.health?.discord];
-    const okCount = services.filter((item) => item?.ok).length;
-    const hasFailures = okCount < services.length;
-    const hasCron = Boolean(data.cronStatus);
-    setBotState(hasFailures ? "degraded" : "ok", hasCron ? (hasFailures ? "Degraded" : "Healthy") : "Awaiting First Run");
-    channelCount.textContent = String(data.summary.channelCount ?? 0);
-    lastScan.textContent = formatDate(data.summary.lastScanAt);
-    lastMovieId.textContent = data.summary.lastNotifiedMovieId || "None";
-    renderCronStatus(data.cronStatus || null);
-    renderSchedule(data.schedule || null);
-    renderHealthItem(healthRedis, healthRedisHint, data.health?.redis);
-    renderHealthItem(healthPahe, healthPaheHint, data.health?.pahe);
-    renderHealthItem(healthDiscord, healthDiscordHint, data.health?.discord);
-    renderChannels(data.channels || []);
-    renderMovies(data.latest || []);
+    setBotState(bot.mode, bot.label);
+    applySummary(data.summary);
+    renderCronStatus(data.cronStatus);
+    renderSchedule(data.schedule);
+    renderHealth(data.health);
+    renderChannels(data.channels);
+    renderMovies(data.latest);
   } catch (error) {
     setBotState("error", "Error");
-    cronNextRun.textContent = "Next run: -";
-    errorBox.textContent = error.message;
-    errorBox.style.display = "block";
+    setError(error.message);
   }
 }
 
-refreshBtn.addEventListener("click", loadDashboard);
-runCronBtn.addEventListener("click", runCronNow);
+elements.refreshBtn.addEventListener("click", loadDashboard);
+elements.runCronBtn.addEventListener("click", runCronNow);
 loadDashboard();
