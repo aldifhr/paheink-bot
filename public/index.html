@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -15,6 +15,7 @@
         --accent: #22c55e;
         --accent-2: #38bdf8;
         --danger: #f97316;
+        --danger-2: #ef4444;
         --shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
       }
 
@@ -31,7 +32,7 @@
       }
 
       .wrap {
-        width: min(1100px, calc(100% - 32px));
+        width: min(1180px, calc(100% - 32px));
         margin: 32px auto 48px;
       }
 
@@ -82,7 +83,7 @@
         padding: 18px;
       }
 
-      .stat { grid-column: span 4; }
+      .stat { grid-column: span 3; }
       .wide { grid-column: span 12; }
       .half { grid-column: span 6; }
 
@@ -95,7 +96,7 @@
       }
 
       .value {
-        font-size: clamp(1.5rem, 3vw, 2.4rem);
+        font-size: clamp(1.35rem, 3vw, 2.2rem);
         line-height: 1.05;
       }
 
@@ -114,6 +115,11 @@
         box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.12);
       }
 
+      .dot.offline {
+        background: var(--danger-2);
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.12);
+      }
+
       .list {
         display: grid;
         gap: 12px;
@@ -127,6 +133,31 @@
         border-radius: 16px;
         background: rgba(255,255,255,0.035);
         border: 1px solid rgba(255,255,255,0.05);
+      }
+
+      .cron-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .mini {
+        border-radius: 16px;
+        padding: 14px;
+        background: rgba(255,255,255,0.035);
+        border: 1px solid rgba(255,255,255,0.05);
+      }
+
+      .mini .k {
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 8px;
+      }
+
+      .mini .v {
+        font-size: 1.3rem;
       }
 
       .movies {
@@ -178,9 +209,10 @@
         margin-bottom: 16px;
       }
 
-      @media (max-width: 820px) {
+      @media (max-width: 920px) {
         .stat, .half, .wide { grid-column: span 12; }
         .movies { grid-template-columns: 1fr; }
+        .cron-grid { grid-template-columns: 1fr 1fr; }
         .hero { align-items: start; flex-direction: column; }
       }
     </style>
@@ -203,7 +235,7 @@
       <section class="grid">
         <article class="card stat">
           <div class="label">Bot State</div>
-          <div class="status"><span class="dot"></span><span id="botState">Loading...</span></div>
+          <div class="status"><span id="botDot" class="dot"></span><span id="botState">Loading...</span></div>
         </article>
         <article class="card stat">
           <div class="label">Registered Channels</div>
@@ -213,15 +245,36 @@
           <div class="label">Last Scan</div>
           <div class="value" id="lastScan">-</div>
         </article>
-
-        <article class="card half">
+        <article class="card stat">
           <div class="label">Last Notified Movie ID</div>
           <div class="value" id="lastMovieId">-</div>
+        </article>
+
+        <article class="card wide">
+          <div class="label">Last Cron Run</div>
+          <div class="cron-grid">
+            <div class="mini"><div class="k">Timestamp</div><div class="v" id="cronTimestamp">-</div></div>
+            <div class="mini"><div class="k">Scanned</div><div class="v" id="cronScanned">-</div></div>
+            <div class="mini"><div class="k">Notified</div><div class="v" id="cronNotified">-</div></div>
+            <div class="mini"><div class="k">Delivered</div><div class="v" id="cronDelivered">-</div></div>
+            <div class="mini"><div class="k">Failed</div><div class="v" id="cronFailed">-</div></div>
+            <div class="mini"><div class="k">Duration</div><div class="v" id="cronDuration">-</div></div>
+            <div class="mini"><div class="k">Newest ID</div><div class="v" id="cronNewestId">-</div></div>
+            <div class="mini"><div class="k">Status</div><div class="v" id="cronStatusText">-</div></div>
+          </div>
         </article>
 
         <article class="card half">
           <div class="label">Notification Channels</div>
           <div class="list" id="channelList"></div>
+        </article>
+
+        <article class="card half">
+          <div class="label">Dashboard Notes</div>
+          <div class="list" id="notesList">
+            <div class="row"><span class="muted">Refresh to fetch current bot state from Redis and pahe.ink.</span></div>
+            <div class="row"><span class="muted">Cron status is the latest stored result from `/api/cron`.</span></div>
+          </div>
         </article>
 
         <article class="card wide">
@@ -233,6 +286,7 @@
 
     <script>
       const botState = document.getElementById("botState");
+      const botDot = document.getElementById("botDot");
       const channelCount = document.getElementById("channelCount");
       const lastScan = document.getElementById("lastScan");
       const lastMovieId = document.getElementById("lastMovieId");
@@ -240,6 +294,14 @@
       const movieList = document.getElementById("movieList");
       const errorBox = document.getElementById("errorBox");
       const refreshBtn = document.getElementById("refreshBtn");
+      const cronTimestamp = document.getElementById("cronTimestamp");
+      const cronScanned = document.getElementById("cronScanned");
+      const cronNotified = document.getElementById("cronNotified");
+      const cronDelivered = document.getElementById("cronDelivered");
+      const cronFailed = document.getElementById("cronFailed");
+      const cronDuration = document.getElementById("cronDuration");
+      const cronNewestId = document.getElementById("cronNewestId");
+      const cronStatusText = document.getElementById("cronStatusText");
 
       function formatDate(value) {
         if (!value) return "Never";
@@ -293,9 +355,21 @@
         }
       }
 
+      function renderCronStatus(status) {
+        cronTimestamp.textContent = formatDate(status?.timestamp);
+        cronScanned.textContent = String(status?.scanned ?? 0);
+        cronNotified.textContent = String(status?.notifiedMovies ?? 0);
+        cronDelivered.textContent = String(status?.delivered ?? 0);
+        cronFailed.textContent = String(status?.failed ?? 0);
+        cronDuration.textContent = status?.durationMs != null ? `${status.durationMs} ms` : "-";
+        cronNewestId.textContent = status?.newestId || "-";
+        cronStatusText.textContent = status?.ok === false ? "Error" : "OK";
+      }
+
       async function loadDashboard() {
         errorBox.style.display = "none";
         botState.textContent = "Refreshing...";
+        botDot.classList.remove("offline");
 
         try {
           const response = await fetch("/api/dashboard", { cache: "no-store" });
@@ -308,10 +382,12 @@
           channelCount.textContent = String(data.summary.channelCount ?? 0);
           lastScan.textContent = formatDate(data.summary.lastScanAt);
           lastMovieId.textContent = data.summary.lastNotifiedMovieId || "None";
+          renderCronStatus(data.cronStatus || null);
           renderChannels(data.channels || []);
           renderMovies(data.latest || []);
         } catch (error) {
           botState.textContent = "Error";
+          botDot.classList.add("offline");
           errorBox.textContent = error.message;
           errorBox.style.display = "block";
         }

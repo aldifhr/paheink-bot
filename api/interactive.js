@@ -1,4 +1,4 @@
-import { verifyKey } from "discord-interactions";
+﻿import { verifyKey } from "discord-interactions";
 import { waitUntil } from "@vercel/functions";
 import { InteractionType, InteractionResponseType, MessageFlags } from "../lib/constants.js";
 import {
@@ -9,6 +9,7 @@ import {
   handleSetChannel,
   handleStatus,
 } from "../lib/commands.js";
+import { logApiError, logApiHit, logApiOk } from "../lib/requestLog.js";
 
 export const config = { api: { bodyParser: false } };
 
@@ -22,7 +23,10 @@ async function getRawBody(req) {
 }
 
 export default async function handler(req, res) {
+  const reqLogger = logApiHit("interactive", req);
+
   if (req.method !== "POST") {
+    logApiOk(reqLogger, { status: 405 });
     return res.status(405).end();
   }
 
@@ -35,20 +39,24 @@ export default async function handler(req, res) {
   );
 
   if (!isValid) {
+    logApiOk(reqLogger, { status: 401, reason: "invalid_signature" });
     return res.status(401).end("invalid request signature");
   }
 
   const payload = JSON.parse(rawBody);
 
   if (payload.type === InteractionType.PING) {
+    logApiOk(reqLogger, { status: 200, interactionType: payload.type });
     return res.json({ type: InteractionResponseType.PONG });
   }
 
   if (payload.type === InteractionType.MESSAGE_COMPONENT) {
     if (payload.data?.custom_id === "movie_select") {
       try {
+        logApiOk(reqLogger, { status: 200, event: "movie_select" });
         return await handleMovieSelect(payload, res);
       } catch (error) {
+        logApiError(reqLogger, error, { status: 200, event: "movie_select_error" });
         return res.json({
           type: InteractionResponseType.UPDATE_MESSAGE,
           data: {
@@ -60,10 +68,12 @@ export default async function handler(req, res) {
       }
     }
 
+    logApiOk(reqLogger, { status: 400, reason: "unknown_component" });
     return res.status(400).json({ error: "Unknown component" });
   }
 
   if (payload.type !== InteractionType.APPLICATION_COMMAND) {
+    logApiOk(reqLogger, { status: 400, reason: "unsupported_interaction_type" });
     return res.status(400).json({ error: "Unsupported interaction type" });
   }
 
@@ -71,24 +81,30 @@ export default async function handler(req, res) {
   const options = payload.data?.options ?? [];
 
   if (command === "ping") {
+    logApiOk(reqLogger, { status: 200, command });
     return handlePing(res);
   }
 
   if (command === "setchannel") {
+    logApiOk(reqLogger, { status: 200, command });
     return handleSetChannel(payload, options, res);
   }
 
   if (command === "status") {
+    logApiOk(reqLogger, { status: 200, command });
     return handleStatus(payload, res);
   }
 
   if (command === "search") {
+    logApiOk(reqLogger, { status: 200, command });
     return handleSearch(payload, options, res, waitUntil);
   }
 
   if (command === "latest") {
+    logApiOk(reqLogger, { status: 200, command });
     return handleLatest(payload, res, waitUntil);
   }
 
+  logApiOk(reqLogger, { status: 400, reason: "unknown_command", command });
   return res.status(400).json({ error: "Unknown command" });
 }
